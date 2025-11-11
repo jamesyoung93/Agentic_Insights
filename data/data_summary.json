@@ -1,0 +1,30 @@
+{
+  "customers": 4992,
+  "transactions": 1576334,
+  "date_range": {
+    "start": "2023-01-01",
+    "end": "2024-12-30"
+  },
+  "regions": [
+    "Northeast",
+    "South",
+    "Midwest",
+    "West"
+  ],
+  "cities": [
+    "New York",
+    "Boston",
+    "Philadelphia",
+    "Atlanta",
+    "Miami",
+    "Houston",
+    "Chicago",
+    "Detroit",
+    "Minneapolis",
+    "Los Angeles",
+    "San Francisco",
+    "Seattle"
+  ],
+  "avg_transaction_value": 7.9,
+  "avg_satisfaction": 4.3
+}
