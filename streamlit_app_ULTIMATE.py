@@ -708,26 +708,40 @@ Return ONLY valid JSON. DO NOT fabricate statistics."""
             'hypotheses': []
         }
 
-def is_similar_discovery(new_title: str, existing_discoveries: List[Dict], similarity_threshold: float = 0.7) -> bool:
+def is_similar_discovery(new_title: str, existing_discoveries: List[Dict], similarity_threshold: float = 0.4) -> bool:
     """
     Check if a discovery with similar title already exists
     Uses simple word overlap for similarity detection
+    Lowered threshold to 0.4 (40%) to catch more duplicates
     """
     if not existing_discoveries:
         return False
 
+    # Extract key terms from new title
     new_words = set(new_title.lower().split())
+    # Focus on meaningful words (filter out common words)
+    stop_words = {'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'is', 'was', 'are', 'were'}
+    new_meaningful = new_words - stop_words
 
     for disc in existing_discoveries:
         existing_words = set(disc['title'].lower().split())
+        existing_meaningful = existing_words - stop_words
 
-        # Calculate Jaccard similarity
-        intersection = len(new_words & existing_words)
-        union = len(new_words | existing_words)
+        # Calculate Jaccard similarity on meaningful words
+        if not new_meaningful or not existing_meaningful:
+            continue
+
+        intersection = len(new_meaningful & existing_meaningful)
+        union = len(new_meaningful | existing_meaningful)
 
         if union > 0:
             similarity = intersection / union
             if similarity >= similarity_threshold:
+                return True
+
+        # Also check if new title is substring or vice versa
+        if len(new_title) > 20 and len(disc['title']) > 20:
+            if new_title.lower() in disc['title'].lower() or disc['title'].lower() in new_title.lower():
                 return True
 
     return False
@@ -826,24 +840,32 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
             stat_support = disc_data.get('statistical_support', '')
             relevant_traj_ids = []
 
-            # Match trajectories based on keywords in statistical support
+            # Match trajectories based on keywords in statistical support AND discovery title
+            title_lower = disc_title.lower()
             for traj in [t for t in state['trajectories'] if t['cycle'] == cycle_num]:
                 traj_question = traj.get('question', '').lower()
-                # Check if trajectory question relates to the discovery
-                if any(word in traj_question for word in ['income', 'spend'] if 'income' in stat_support.lower() or 'spend' in stat_support.lower()):
-                    relevant_traj_ids.append(traj['id'])
-                elif any(word in traj_question for word in ['age', 'satisfaction'] if 'age' in stat_support.lower() or 'satisfaction' in stat_support.lower()):
-                    relevant_traj_ids.append(traj['id'])
-                elif any(word in traj_question for word in ['loyalty', 'member'] if 'loyalty' in stat_support.lower()):
-                    relevant_traj_ids.append(traj['id'])
-                elif any(word in traj_question for word in ['mobile', 'app'] if 'mobile' in stat_support.lower() or 'app' in stat_support.lower()):
-                    relevant_traj_ids.append(traj['id'])
-                elif any(word in traj_question for word in ['category', 'product'] if 'category' in stat_support.lower() or 'product' in stat_support.lower()):
-                    relevant_traj_ids.append(traj['id'])
 
-            # If no specific match, use all trajectories from cycle (fallback)
-            if not relevant_traj_ids:
-                relevant_traj_ids = [t['id'] for t in state['trajectories'] if t['cycle'] == cycle_num]
+                # Check if trajectory question relates to the discovery (check both stat support and title)
+                keywords_map = {
+                    ('income', 'spend', 'spending', 'revenue'): ['income', 'spend'],
+                    ('age', 'satisfaction', 'satisfy'): ['age', 'satisfaction'],
+                    ('loyalty', 'member', 'retention'): ['loyalty', 'member', 'retention'],
+                    ('mobile', 'app', 'digital'): ['mobile', 'app'],
+                    ('category', 'product', 'segment'): ['category', 'product'],
+                    ('region', 'location', 'geographic'): ['region', 'location'],
+                    ('payment', 'transaction', 'method'): ['payment', 'transaction', 'method'],
+                    ('wait', 'time', 'service'): ['wait', 'time', 'service']
+                }
+
+                for stat_keywords, question_keywords in keywords_map.items():
+                    # Check if any keyword from stat_support/title matches question keywords
+                    if any(kw in stat_support.lower() or kw in title_lower for kw in stat_keywords):
+                        if any(qkw in traj_question for qkw in question_keywords):
+                            relevant_traj_ids.append(traj['id'])
+                            break
+
+            # NO FALLBACK - only link if we found relevant trajectories
+            # This prevents showing 30+ unrelated stats per discovery
 
             discovery = wm.add_discovery(
                 title=disc_title,
@@ -865,6 +887,81 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
             })
 
             log_message(f"  💡 Discovery: {discovery.title}", "success")
+
+        # Also add non-significant findings that LLM didn't cover
+        log_message("  📊 Adding non-significant findings...", "info")
+        for analysis in cycle_analyses:
+            analysis_question = analysis.get('question', '')
+
+            # Find the trajectory ID for this specific analysis
+            relevant_traj_id = None
+            for traj in state['trajectories']:
+                if traj['cycle'] == cycle_num and traj.get('question') == analysis_question:
+                    relevant_traj_id = traj['id']
+                    break
+
+            for finding_key, finding_data in analysis.get('findings', {}).items():
+                is_significant = finding_data.get('significant', False)
+
+                # Only add NON-significant findings here (LLM already covered significant ones)
+                if is_significant:
+                    continue
+
+                stats = analysis['statistical_evidence'].get(finding_key, {})
+                base_title = finding_data['description']
+                title = f"No significant relationship found: {base_title}"
+
+                # Check for duplicate
+                if is_similar_discovery(title, state['discoveries']):
+                    continue
+
+                # Format evidence
+                evidence = []
+                if 'p_value' in stats:
+                    evidence.append(f"p-value: {stats['p_value']:.4f} (not significant, p≥0.05)")
+                if 'correlation' in stats:
+                    evidence.append(f"Correlation: r={stats['correlation']:.3f}")
+                if 'f_statistic' in stats:
+                    evidence.append(f"F-statistic: {stats['f_statistic']:.2f}")
+                if 't_statistic' in stats:
+                    evidence.append(f"t-statistic: {stats['t_statistic']:.2f}")
+                if 'cohens_d' in stats:
+                    evidence.append(f"Cohen's d: {stats['cohens_d']:.2f}")
+                evidence.append(f"Sample size: n={stats.get('n', len(df))}")
+
+                summary = f"Analysis found no significant relationship. {base_title} The observed pattern may be due to chance (p≥0.05)."
+
+                # Create statistical support summary
+                stat_summary_parts = []
+                if 'correlation' in stats:
+                    stat_summary_parts.append(f"r={stats['correlation']:.3f}")
+                if 'p_value' in stats:
+                    stat_summary_parts.append(f"p={stats['p_value']:.4f}")
+                if 'n' in stats:
+                    stat_summary_parts.append(f"n={stats['n']}")
+                stat_summary = ', '.join(stat_summary_parts) if stat_summary_parts else 'See evidence list'
+
+                discovery = wm.add_discovery(
+                    title=title,
+                    summary=summary,
+                    evidence=evidence,
+                    trajectory_ids=[relevant_traj_id] if relevant_traj_id else [],
+                    confidence=0.50  # Low confidence for non-significant
+                )
+
+                state['discoveries'].append({
+                    'title': discovery.title,
+                    'summary': discovery.summary,
+                    'evidence': discovery.evidence,
+                    'cycle': cycle_num,
+                    'trajectory_ids': discovery.trajectory_ids,
+                    'confidence': discovery.confidence,
+                    'statistical_support': stat_summary,
+                    'statistical_details': stats,
+                    'is_significant': False
+                })
+
+                log_message(f"  📉 Non-significant: {finding_key}", "info")
 
         # Add hypotheses
         for hyp in synthesis.get('hypotheses', []):
