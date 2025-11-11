@@ -14,7 +14,7 @@ import traceback
 from pathlib import Path
 from datetime import datetime
 from scipy import stats as scipy_stats
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Iterable
 
 # Add current directory to path
 BASE_DIR = Path.cwd()
@@ -193,6 +193,32 @@ def load_data() -> Optional[pd.DataFrame]:
             )
             log_message("ℹ️ Estimated product_category", "info")
 
+        # Clean up missing / invalid values that can break statistical tests
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        if 'satisfaction' in df.columns:
+            satisfaction_fill = df['satisfaction'].median()
+            if pd.isna(satisfaction_fill):
+                satisfaction_fill = 3.0
+            df['satisfaction'] = df['satisfaction'].fillna(satisfaction_fill).clip(1, 5)
+
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            if df[col].isna().any():
+                fill_value = df[col].median()
+                if pd.isna(fill_value):
+                    fill_value = 0
+                df[col] = df[col].fillna(fill_value)
+
+        categorical_cols = df.select_dtypes(include=['object']).columns
+        for col in categorical_cols:
+            if df[col].isna().any():
+                df[col] = df[col].fillna(df[col].mode().iloc[0] if not df[col].mode().empty else 'Unknown')
+
+        boolean_cols = df.select_dtypes(include=['bool']).columns
+        if len(boolean_cols) > 0:
+            df[boolean_cols] = df[boolean_cols].fillna(False)
+
         state['df'] = df
         state['data_loaded'] = True
         log_message(f"✅ Final dataset ready: {len(df)} rows, {len(df.columns)} columns", "success")
@@ -238,6 +264,22 @@ def generate_sample_data(n: int = 2000) -> pd.DataFrame:
 
     return df
 
+def _sanitize_for_analysis(df: pd.DataFrame, columns: Iterable[str]) -> Optional[pd.DataFrame]:
+    """Return a cleaned dataframe limited to the requested columns for statistical tests."""
+    missing = [col for col in columns if col not in df.columns]
+    if missing:
+        log_message(f"⚠️ Missing columns for analysis: {', '.join(missing)}", "warning")
+        return None
+
+    subset = df[list(columns)].copy()
+    subset.replace([np.inf, -np.inf], np.nan, inplace=True)
+    subset.dropna(inplace=True)
+    if subset.empty:
+        log_message("⚠️ Not enough valid data after cleaning for statistical analysis", "warning")
+        return None
+    return subset
+
+
 def perform_statistical_analysis(question: str, df: pd.DataFrame, cycle: int) -> Dict[str, Any]:
     """
     Perform real statistical analysis using scipy
@@ -253,154 +295,163 @@ def perform_statistical_analysis(question: str, df: pd.DataFrame, cycle: int) ->
 
     try:
         # Analysis 1: Age vs Satisfaction Correlation
-        if any(term in question.lower() for term in ['age', 'satisfaction', 'demographic']) and \
-           'age' in df.columns and 'satisfaction' in df.columns:
-            corr, p_value = scipy_stats.pearsonr(df['age'], df['satisfaction'])
+        if any(term in question.lower() for term in ['age', 'satisfaction', 'demographic']):
+            subset = _sanitize_for_analysis(df, ['age', 'satisfaction'])
+            if subset is not None and len(subset) > 2:
+                corr, p_value = scipy_stats.pearsonr(subset['age'], subset['satisfaction'])
 
-            results['findings']['age_satisfaction'] = {
-                'description': f"Age-Satisfaction correlation: r={corr:.3f}, {'significant' if p_value < 0.05 else 'not significant'}",
-                'significant': p_value < 0.05,
-                'effect_size': abs(corr)
-            }
-            results['statistical_evidence']['age_satisfaction'] = {
-                'correlation': float(corr),
-                'p_value': float(p_value),
-                'n': len(df),
-                'effect_size_label': 'small' if abs(corr) < 0.3 else 'medium' if abs(corr) < 0.5 else 'large',
-                'confidence_interval_95': [float(corr - 1.96 * np.sqrt((1-corr**2)/(len(df)-2))),
-                                           float(corr + 1.96 * np.sqrt((1-corr**2)/(len(df)-2)))]
-            }
-            results['analysis_type'].append('Pearson Correlation')
+                results['findings']['age_satisfaction'] = {
+                    'description': f"Age-Satisfaction correlation: r={corr:.3f}, {'significant' if p_value < 0.05 else 'not significant'}",
+                    'significant': p_value < 0.05,
+                    'effect_size': abs(corr)
+                }
+                results['statistical_evidence']['age_satisfaction'] = {
+                    'correlation': float(corr),
+                    'p_value': float(p_value),
+                    'n': len(subset),
+                    'effect_size_label': 'small' if abs(corr) < 0.3 else 'medium' if abs(corr) < 0.5 else 'large',
+                    'confidence_interval_95': [float(corr - 1.96 * np.sqrt((1-corr**2)/(len(subset)-2))),
+                                               float(corr + 1.96 * np.sqrt((1-corr**2)/(len(subset)-2)))]
+                }
+                results['analysis_type'].append('Pearson Correlation')
 
         # Analysis 2: Income vs Spending Regression
-        if any(term in question.lower() for term in ['income', 'spend', 'revenue', 'value']) and \
-           'income' in df.columns and 'total_spend' in df.columns:
-            slope, intercept, r_value, p_value, std_err = scipy_stats.linregress(df['income'], df['total_spend'])
+        if any(term in question.lower() for term in ['income', 'spend', 'revenue', 'value']):
+            subset = _sanitize_for_analysis(df, ['income', 'total_spend'])
+            if subset is not None and len(subset) > 2:
+                slope, intercept, r_value, p_value, std_err = scipy_stats.linregress(subset['income'], subset['total_spend'])
 
-            results['findings']['income_spending'] = {
-                'description': f"Income predicts spending: β={slope:.4f}, R²={r_value**2:.3f}, p<0.001",
-                'significant': p_value < 0.05,
-                'effect_size': r_value**2
-            }
-            results['statistical_evidence']['income_spending'] = {
-                'correlation': float(r_value),
-                'p_value': float(p_value),
-                'slope': float(slope),
-                'intercept': float(intercept),
-                'r_squared': float(r_value**2),
-                'std_error': float(std_err),
-                'n': len(df),
-                'interpretation': f"For every $1000 increase in income, spending increases by ${slope*1000:.2f}"
-            }
-            results['analysis_type'].append('Linear Regression')
+                results['findings']['income_spending'] = {
+                    'description': f"Income predicts spending: β={slope:.4f}, R²={r_value**2:.3f}, p<0.001",
+                    'significant': p_value < 0.05,
+                    'effect_size': r_value**2
+                }
+                results['statistical_evidence']['income_spending'] = {
+                    'correlation': float(r_value),
+                    'p_value': float(p_value),
+                    'slope': float(slope),
+                    'intercept': float(intercept),
+                    'r_squared': float(r_value**2),
+                    'std_error': float(std_err),
+                    'n': len(subset),
+                    'interpretation': f"For every $1000 increase in income, spending increases by ${slope*1000:.2f}"
+                }
+                results['analysis_type'].append('Linear Regression')
 
         # Analysis 3: Category Differences (ANOVA)
-        if any(term in question.lower() for term in ['category', 'product', 'segment', 'group']) and \
-           'product_category' in df.columns and 'satisfaction' in df.columns:
-            categories = df.groupby('product_category')['satisfaction'].apply(list)
-            f_stat, p_value = scipy_stats.f_oneway(*categories.values)
+        if any(term in question.lower() for term in ['category', 'product', 'segment', 'group']):
+            subset = _sanitize_for_analysis(df, ['product_category', 'satisfaction'])
+            if subset is not None:
+                categories = subset.groupby('product_category')['satisfaction'].apply(list)
+                if len(categories) > 1 and all(len(group) > 1 for group in categories.values):
+                    f_stat, p_value = scipy_stats.f_oneway(*categories.values)
 
-            # Calculate eta-squared
-            mean_overall = df['satisfaction'].mean()
-            ss_between = sum(len(group) * (np.mean(group) - mean_overall)**2 for group in categories.values)
-            ss_total = sum((df['satisfaction'] - mean_overall)**2)
-            eta_squared = ss_between / ss_total if ss_total > 0 else 0
+                    # Calculate eta-squared
+                    mean_overall = subset['satisfaction'].mean()
+                    ss_between = sum(len(group) * (np.mean(group) - mean_overall)**2 for group in categories.values)
+                    ss_total = sum((subset['satisfaction'] - mean_overall)**2)
+                    eta_squared = ss_between / ss_total if ss_total > 0 else 0
 
-            # Get category means
-            category_means = df.groupby('product_category')['satisfaction'].mean().to_dict()
+                    # Get category means
+                    category_means = subset.groupby('product_category')['satisfaction'].mean().to_dict()
 
-            results['findings']['category_differences'] = {
-                'description': f"Product categories differ in satisfaction: F({len(categories)-1},{len(df)-len(categories)})={f_stat:.2f}, p={p_value:.4f}",
-                'significant': p_value < 0.05,
-                'effect_size': eta_squared
-            }
-            results['statistical_evidence']['category_differences'] = {
-                'f_statistic': float(f_stat),
-                'p_value': float(p_value),
-                'eta_squared': float(eta_squared),
-                'df_between': len(categories) - 1,
-                'df_within': len(df) - len(categories),
-                'category_means': {k: float(v) for k, v in category_means.items()},
-                'n': len(df)
-            }
-            results['analysis_type'].append('One-Way ANOVA')
+                    results['findings']['category_differences'] = {
+                        'description': f"Product categories differ in satisfaction: F({len(categories)-1},{len(subset)-len(categories)})={f_stat:.2f}, p={p_value:.4f}",
+                        'significant': p_value < 0.05,
+                        'effect_size': eta_squared
+                    }
+                    results['statistical_evidence']['category_differences'] = {
+                        'f_statistic': float(f_stat),
+                        'p_value': float(p_value),
+                        'eta_squared': float(eta_squared),
+                        'df_between': len(categories) - 1,
+                        'df_within': len(subset) - len(categories),
+                        'category_means': {k: float(v) for k, v in category_means.items()},
+                        'n': len(subset)
+                    }
+                    results['analysis_type'].append('One-Way ANOVA')
 
         # Analysis 4: Loyalty Member Comparison (t-test)
-        if any(term in question.lower() for term in ['loyalty', 'member', 'retention']) and \
-           'loyalty_member' in df.columns and 'total_spend' in df.columns:
-            loyal = df[df['loyalty_member'] == True]['total_spend']
-            non_loyal = df[df['loyalty_member'] == False]['total_spend']
+        if any(term in question.lower() for term in ['loyalty', 'member', 'retention']):
+            subset = _sanitize_for_analysis(df, ['loyalty_member', 'total_spend'])
+            if subset is not None:
+                loyal = subset[subset['loyalty_member'] == True]['total_spend']
+                non_loyal = subset[subset['loyalty_member'] == False]['total_spend']
 
-            t_stat, p_value = scipy_stats.ttest_ind(loyal, non_loyal)
+                if len(loyal) > 1 and len(non_loyal) > 1:
+                    t_stat, p_value = scipy_stats.ttest_ind(loyal, non_loyal)
 
-            # Cohen's d effect size
-            pooled_std = np.sqrt(((len(loyal)-1)*loyal.std()**2 + (len(non_loyal)-1)*non_loyal.std()**2) /
-                                (len(loyal) + len(non_loyal) - 2))
-            cohens_d = (loyal.mean() - non_loyal.mean()) / pooled_std if pooled_std > 0 else 0
+                    # Cohen's d effect size
+                    pooled_std = np.sqrt(((len(loyal)-1)*loyal.std()**2 + (len(non_loyal)-1)*non_loyal.std()**2) /
+                                        (len(loyal) + len(non_loyal) - 2))
+                    cohens_d = (loyal.mean() - non_loyal.mean()) / pooled_std if pooled_std > 0 else 0
 
-            results['findings']['loyalty_impact'] = {
-                'description': f"Loyalty members spend significantly more: ${loyal.mean():.2f} vs ${non_loyal.mean():.2f} (d={cohens_d:.2f})",
-                'significant': p_value < 0.05,
-                'effect_size': abs(cohens_d)
-            }
-            results['statistical_evidence']['loyalty_impact'] = {
-                't_statistic': float(t_stat),
-                'p_value': float(p_value),
-                'cohens_d': float(cohens_d),
-                'mean_loyal': float(loyal.mean()),
-                'mean_non_loyal': float(non_loyal.mean()),
-                'std_loyal': float(loyal.std()),
-                'std_non_loyal': float(non_loyal.std()),
-                'n_loyal': len(loyal),
-                'n_non_loyal': len(non_loyal),
-                'effect_size_label': 'small' if abs(cohens_d) < 0.5 else 'medium' if abs(cohens_d) < 0.8 else 'large'
-            }
-            results['analysis_type'].append('Independent t-test')
+                    results['findings']['loyalty_impact'] = {
+                        'description': f"Loyalty members spend significantly more: ${loyal.mean():.2f} vs ${non_loyal.mean():.2f} (d={cohens_d:.2f})",
+                        'significant': p_value < 0.05,
+                        'effect_size': abs(cohens_d)
+                    }
+                    results['statistical_evidence']['loyalty_impact'] = {
+                        't_statistic': float(t_stat),
+                        'p_value': float(p_value),
+                        'cohens_d': float(cohens_d),
+                        'mean_loyal': float(loyal.mean()),
+                        'mean_non_loyal': float(non_loyal.mean()),
+                        'std_loyal': float(loyal.std()),
+                        'std_non_loyal': float(non_loyal.std()),
+                        'n_loyal': len(loyal),
+                        'n_non_loyal': len(non_loyal),
+                        'effect_size_label': 'small' if abs(cohens_d) < 0.5 else 'medium' if abs(cohens_d) < 0.8 else 'large'
+                    }
+                    results['analysis_type'].append('Independent t-test')
 
         # Analysis 5: Mobile App Usage Impact
-        if any(term in question.lower() for term in ['mobile', 'app', 'technology', 'digital']) and \
-           'mobile_app_user' in df.columns and 'transaction_count' in df.columns:
-            app_users = df[df['mobile_app_user'] == True]['transaction_count']
-            non_app_users = df[df['mobile_app_user'] == False]['transaction_count']
+        if any(term in question.lower() for term in ['mobile', 'app', 'technology', 'digital']):
+            subset = _sanitize_for_analysis(df, ['mobile_app_user', 'transaction_count'])
+            if subset is not None:
+                app_users = subset[subset['mobile_app_user'] == True]['transaction_count']
+                non_app_users = subset[subset['mobile_app_user'] == False]['transaction_count']
 
-            t_stat, p_value = scipy_stats.ttest_ind(app_users, non_app_users)
+                if len(app_users) > 1 and len(non_app_users) > 1:
+                    t_stat, p_value = scipy_stats.ttest_ind(app_users, non_app_users)
 
-            pooled_std = np.sqrt(((len(app_users)-1)*app_users.std()**2 + (len(non_app_users)-1)*non_app_users.std()**2) /
-                                (len(app_users) + len(non_app_users) - 2))
-            cohens_d = (app_users.mean() - non_app_users.mean()) / pooled_std if pooled_std > 0 else 0
+                    pooled_std = np.sqrt(((len(app_users)-1)*app_users.std()**2 + (len(non_app_users)-1)*non_app_users.std()**2) /
+                                        (len(app_users) + len(non_app_users) - 2))
+                    cohens_d = (app_users.mean() - non_app_users.mean()) / pooled_std if pooled_std > 0 else 0
 
-            results['findings']['mobile_app_effect'] = {
-                'description': f"Mobile app users make {app_users.mean():.1f} vs {non_app_users.mean():.1f} transactions (d={cohens_d:.2f})",
-                'significant': p_value < 0.05,
-                'effect_size': abs(cohens_d)
-            }
-            results['statistical_evidence']['mobile_app_effect'] = {
-                't_statistic': float(t_stat),
-                'p_value': float(p_value),
-                'cohens_d': float(cohens_d),
-                'mean_app_users': float(app_users.mean()),
-                'mean_non_app_users': float(non_app_users.mean()),
-                'n_app_users': len(app_users),
-                'n_non_app_users': len(non_app_users)
-            }
-            results['analysis_type'].append('Independent t-test')
+                    results['findings']['mobile_app_effect'] = {
+                        'description': f"Mobile app users make {app_users.mean():.1f} vs {non_app_users.mean():.1f} transactions (d={cohens_d:.2f})",
+                        'significant': p_value < 0.05,
+                        'effect_size': abs(cohens_d)
+                    }
+                    results['statistical_evidence']['mobile_app_effect'] = {
+                        't_statistic': float(t_stat),
+                        'p_value': float(p_value),
+                        'cohens_d': float(cohens_d),
+                        'mean_app_users': float(app_users.mean()),
+                        'mean_non_app_users': float(non_app_users.mean()),
+                        'n_app_users': len(app_users),
+                        'n_non_app_users': len(non_app_users)
+                    }
+                    results['analysis_type'].append('Independent t-test')
 
         # Analysis 6: Wait Time vs Satisfaction
-        if any(term in question.lower() for term in ['wait', 'time', 'service', 'speed']) and \
-           'avg_wait_time' in df.columns and 'satisfaction' in df.columns:
-            corr, p_value = scipy_stats.pearsonr(df['avg_wait_time'], df['satisfaction'])
+        if any(term in question.lower() for term in ['wait', 'time', 'service', 'speed']):
+            subset = _sanitize_for_analysis(df, ['avg_wait_time', 'satisfaction'])
+            if subset is not None and len(subset) > 2:
+                corr, p_value = scipy_stats.pearsonr(subset['avg_wait_time'], subset['satisfaction'])
 
-            results['findings']['wait_time_satisfaction'] = {
-                'description': f"Wait time negatively correlates with satisfaction: r={corr:.3f}",
-                'significant': p_value < 0.05,
-                'effect_size': abs(corr)
-            }
-            results['statistical_evidence']['wait_time_satisfaction'] = {
-                'correlation': float(corr),
-                'p_value': float(p_value),
-                'n': len(df)
-            }
-            results['analysis_type'].append('Pearson Correlation')
+                results['findings']['wait_time_satisfaction'] = {
+                    'description': f"Wait time negatively correlates with satisfaction: r={corr:.3f}",
+                    'significant': p_value < 0.05,
+                    'effect_size': abs(corr)
+                }
+                results['statistical_evidence']['wait_time_satisfaction'] = {
+                    'correlation': float(corr),
+                    'p_value': float(p_value),
+                    'n': len(subset)
+                }
+                results['analysis_type'].append('Pearson Correlation')
 
     except Exception as e:
         log_message(f"⚠️ Statistical analysis error: {e}", "warning")
