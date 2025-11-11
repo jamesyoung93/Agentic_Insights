@@ -399,19 +399,54 @@ Return ONLY valid JSON, no other text."""
 def get_default_questions(cycle: int) -> List[Dict[str, str]]:
     """Get default research questions when LLM is not available"""
     all_questions = [
+        # Demographics & Satisfaction
         {"type": "analysis", "question": "What is the relationship between customer age and satisfaction levels?"},
+        {"type": "analysis", "question": "How does customer region affect satisfaction and spending patterns?"},
+
+        # Income & Spending
         {"type": "analysis", "question": "How does income influence customer spending behavior?"},
+        {"type": "analysis", "question": "Do income levels correlate with product category preferences?"},
+
+        # Product Categories
         {"type": "analysis", "question": "Do different product categories show significant differences in customer satisfaction?"},
+        {"type": "analysis", "question": "Which product categories have the highest transaction frequency?"},
+
+        # Loyalty Program
         {"type": "analysis", "question": "What is the impact of loyalty program membership on customer spending?"},
+        {"type": "analysis", "question": "Do loyalty members have higher satisfaction scores than non-members?"},
+
+        # Mobile App Usage
         {"type": "analysis", "question": "How does mobile app usage affect transaction frequency?"},
+        {"type": "analysis", "question": "Is there a relationship between mobile app usage and customer satisfaction?"},
+
+        # Service Quality
         {"type": "analysis", "question": "What is the relationship between wait time and customer satisfaction?"},
-        {"type": "analysis", "question": "How do regional differences affect customer behavior and spending?"},
-        {"type": "analysis", "question": "What factors predict high-value customers?"}
+        {"type": "analysis", "question": "How do service speed metrics correlate with repeat purchase behavior?"},
+
+        # Competitive Analysis
+        {"type": "analysis", "question": "How do competitor visit frequency patterns relate to customer spending?"},
+        {"type": "analysis", "question": "Does competitor satisfaction affect our customer retention?"},
+
+        # Behavioral Patterns
+        {"type": "analysis", "question": "What time of day preferences correlate with higher spending?"},
+        {"type": "analysis", "question": "Are there demographic differences in preferred shopping times?"},
+
+        # High-Value Customers
+        {"type": "analysis", "question": "What demographic and behavioral factors predict high-value customers?"},
+        {"type": "analysis", "question": "Do age and income interact to predict customer lifetime value?"}
     ]
 
-    # Cycle through questions
-    start_idx = (cycle - 1) * 2 % len(all_questions)
-    return all_questions[start_idx:start_idx+2]
+    # Cycle through questions more diversely - pick 3 questions from different sections
+    # This ensures variety across cycles
+    questions_per_cycle = 3
+    start_idx = ((cycle - 1) * questions_per_cycle) % len(all_questions)
+
+    selected = []
+    for i in range(questions_per_cycle):
+        idx = (start_idx + i) % len(all_questions)
+        selected.append(all_questions[idx])
+
+    return selected
 
 def search_literature_llm(query: str, api_key: str, model: str) -> Optional[Dict]:
     """Search literature using the LiteratureSearchAgent"""
@@ -518,6 +553,30 @@ Focus on statistically significant findings (p<0.05). Return ONLY valid JSON."""
             'hypotheses': []
         }
 
+def is_similar_discovery(new_title: str, existing_discoveries: List[Dict], similarity_threshold: float = 0.7) -> bool:
+    """
+    Check if a discovery with similar title already exists
+    Uses simple word overlap for similarity detection
+    """
+    if not existing_discoveries:
+        return False
+
+    new_words = set(new_title.lower().split())
+
+    for disc in existing_discoveries:
+        existing_words = set(disc['title'].lower().split())
+
+        # Calculate Jaccard similarity
+        intersection = len(new_words & existing_words)
+        union = len(new_words | existing_words)
+
+        if union > 0:
+            similarity = intersection / union
+            if similarity >= similarity_threshold:
+                return True
+
+    return False
+
 def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
                        use_llm: bool, api_key: str, model: str):
     """Run a complete discovery cycle"""
@@ -599,13 +658,39 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
     if use_llm and api_key and cycle_analyses:
         synthesis = synthesize_discoveries_llm(cycle_analyses, cycle_literature, cycle_num, api_key, model)
 
-        # Add LLM-synthesized discoveries
+        # Add LLM-synthesized discoveries (with deduplication)
         for disc_data in synthesis.get('discoveries', []):
+            disc_title = disc_data.get('title', 'Untitled')
+
+            # Check for duplicate
+            if is_similar_discovery(disc_title, state['discoveries']):
+                log_message(f"  ⏭️ Skipping duplicate: {disc_title[:50]}...", "info")
+                continue
+
+            # Try to link only relevant trajectories based on statistical support
+            stat_support = disc_data.get('statistical_support', '')
+            relevant_traj_ids = []
+
+            # Match trajectories based on keywords in statistical support
+            for traj in [t for t in state['trajectories'] if t['cycle'] == cycle_num]:
+                traj_question = traj.get('question', '').lower()
+                # Check if trajectory question relates to the discovery
+                if any(word in traj_question for word in ['income', 'spend'] if 'income' in stat_support.lower() or 'spend' in stat_support.lower()):
+                    relevant_traj_ids.append(traj['id'])
+                elif any(word in traj_question for word in ['age', 'satisfaction'] if 'age' in stat_support.lower() or 'satisfaction' in stat_support.lower()):
+                    relevant_traj_ids.append(traj['id'])
+                elif any(word in traj_question for word in ['loyalty', 'member'] if 'loyalty' in stat_support.lower()):
+                    relevant_traj_ids.append(traj['id'])
+
+            # If no specific match, use all trajectories from cycle
+            if not relevant_traj_ids:
+                relevant_traj_ids = [t['id'] for t in state['trajectories'] if t['cycle'] == cycle_num]
+
             discovery = wm.add_discovery(
-                title=disc_data.get('title', 'Untitled'),
+                title=disc_title,
                 summary=disc_data.get('description', ''),
                 evidence=[disc_data.get('statistical_support', 'See statistical analysis')],
-                trajectory_ids=[t['id'] for t in state['trajectories'] if t['cycle'] == cycle_num],
+                trajectory_ids=relevant_traj_ids,
                 confidence=disc_data.get('confidence', 0.9)
             )
 
@@ -615,7 +700,8 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
                 'evidence': discovery.evidence,
                 'cycle': cycle_num,
                 'trajectory_ids': discovery.trajectory_ids,
-                'confidence': discovery.confidence
+                'confidence': discovery.confidence,
+                'statistical_support': stat_support
             })
 
             log_message(f"  💡 Discovery: {discovery.title}", "success")
@@ -624,46 +710,105 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
         for hyp in synthesis.get('hypotheses', []):
             wm.add_hypothesis(hyp, [], 'active')
     else:
-        # Create discoveries from significant statistical findings
+        # Create discoveries from ALL statistical findings (significant and non-significant)
         for analysis in cycle_analyses:
+            analysis_question = analysis.get('question', '')
+
+            # Find the trajectory ID for this specific analysis
+            relevant_traj_id = None
+            for traj in state['trajectories']:
+                if traj['cycle'] == cycle_num and traj.get('question') == analysis_question:
+                    relevant_traj_id = traj['id']
+                    break
+
             for finding_key, finding_data in analysis.get('findings', {}).items():
-                if finding_data.get('significant', False):
-                    stats = analysis['statistical_evidence'].get(finding_key, {})
+                is_significant = finding_data.get('significant', False)
+                stats = analysis['statistical_evidence'].get(finding_key, {})
 
-                    # Format evidence
-                    evidence = []
-                    if 'p_value' in stats:
-                        evidence.append(f"p-value: {stats['p_value']:.4f}")
-                    if 'correlation' in stats:
-                        evidence.append(f"Correlation: r={stats['correlation']:.3f}")
-                    if 'f_statistic' in stats:
-                        evidence.append(f"F-statistic: {stats['f_statistic']:.2f}")
-                    if 't_statistic' in stats:
-                        evidence.append(f"t-statistic: {stats['t_statistic']:.2f}")
-                    if 'cohens_d' in stats:
-                        evidence.append(f"Cohen's d: {stats['cohens_d']:.2f}")
-                    if 'r_squared' in stats:
-                        evidence.append(f"R²: {stats['r_squared']:.3f}")
-                    evidence.append(f"Sample size: n={stats.get('n', len(df))}")
+                # Create title with significance indicator
+                base_title = finding_data['description']
+                if is_significant:
+                    title = base_title
+                else:
+                    title = f"No significant relationship found: {base_title}"
 
-                    discovery = wm.add_discovery(
-                        title=finding_data['description'],
-                        summary=f"Statistical analysis reveals: {finding_data['description']}",
-                        evidence=evidence,
-                        trajectory_ids=[t['id'] for t in state['trajectories'] if t['cycle'] == cycle_num],
-                        confidence=0.95 if stats.get('p_value', 1) < 0.01 else 0.90
-                    )
+                # Check for duplicate
+                if is_similar_discovery(title, state['discoveries']):
+                    log_message(f"  ⏭️ Skipping duplicate: {title[:50]}...", "info")
+                    continue
 
-                    state['discoveries'].append({
-                        'title': discovery.title,
-                        'summary': discovery.summary,
-                        'evidence': discovery.evidence,
-                        'cycle': cycle_num,
-                        'trajectory_ids': discovery.trajectory_ids,
-                        'confidence': discovery.confidence
-                    })
+                # Format evidence
+                evidence = []
+                if 'p_value' in stats:
+                    p_val = stats['p_value']
+                    if is_significant:
+                        evidence.append(f"p-value: {p_val:.4f} (significant, p<0.05)")
+                    else:
+                        evidence.append(f"p-value: {p_val:.4f} (not significant, p≥0.05)")
 
+                if 'correlation' in stats:
+                    evidence.append(f"Correlation: r={stats['correlation']:.3f}")
+                if 'f_statistic' in stats:
+                    evidence.append(f"F-statistic: {stats['f_statistic']:.2f}")
+                if 't_statistic' in stats:
+                    evidence.append(f"t-statistic: {stats['t_statistic']:.2f}")
+                if 'cohens_d' in stats:
+                    evidence.append(f"Cohen's d: {stats['cohens_d']:.2f}")
+                if 'r_squared' in stats:
+                    evidence.append(f"R²: {stats['r_squared']:.3f}")
+                if 'eta_squared' in stats:
+                    evidence.append(f"η²: {stats['eta_squared']:.3f}")
+                evidence.append(f"Sample size: n={stats.get('n', len(df))}")
+
+                # Create summary with significance note
+                if is_significant:
+                    summary = f"Statistical analysis reveals: {base_title}"
+                else:
+                    summary = f"Analysis found no significant relationship. {base_title} The observed pattern may be due to chance (p≥0.05)."
+
+                # Create statistical support summary
+                stat_summary_parts = []
+                if 'correlation' in stats:
+                    stat_summary_parts.append(f"r={stats['correlation']:.3f}")
+                if 'p_value' in stats:
+                    stat_summary_parts.append(f"p={stats['p_value']:.4f}")
+                if 't_statistic' in stats:
+                    stat_summary_parts.append(f"t={stats['t_statistic']:.3f}")
+                if 'f_statistic' in stats:
+                    stat_summary_parts.append(f"F={stats['f_statistic']:.3f}")
+                if 'cohens_d' in stats:
+                    stat_summary_parts.append(f"d={stats['cohens_d']:.3f}")
+                if 'r_squared' in stats:
+                    stat_summary_parts.append(f"R²={stats['r_squared']:.3f}")
+                if 'n' in stats:
+                    stat_summary_parts.append(f"n={stats['n']}")
+
+                stat_summary = ', '.join(stat_summary_parts) if stat_summary_parts else 'See evidence list'
+
+                discovery = wm.add_discovery(
+                    title=title,
+                    summary=summary,
+                    evidence=evidence,
+                    trajectory_ids=[relevant_traj_id] if relevant_traj_id else [],
+                    confidence=0.95 if (is_significant and stats.get('p_value', 1) < 0.01) else (0.90 if is_significant else 0.50)
+                )
+
+                state['discoveries'].append({
+                    'title': discovery.title,
+                    'summary': discovery.summary,
+                    'evidence': discovery.evidence,
+                    'cycle': cycle_num,
+                    'trajectory_ids': discovery.trajectory_ids,
+                    'confidence': discovery.confidence,
+                    'statistical_support': stat_summary,
+                    'statistical_details': stats,
+                    'is_significant': is_significant
+                })
+
+                if is_significant:
                     log_message(f"  💡 Discovery: {discovery.title[:60]}...", "success")
+                else:
+                    log_message(f"  ℹ️ Non-significant: {discovery.title[:60]}...", "info")
 
     # Step 4: Update cycle
     wm.increment_cycle()
