@@ -1,0 +1,41 @@
+# Research Objectives
+# Edit this file to guide what Kosmos investigates
+
+## Primary Objective
+Identify key drivers of customer loyalty and revenue in the coffee shop chain business. 
+Investigate how customer attributes, behaviors, and competitor interactions influence 
+visit frequency, spending, and satisfaction.
+
+## Specific Questions to Explore
+1. What customer segments have the highest lifetime value?
+2. How do seasonal patterns affect revenue across different regions?
+3. What is the relationship between mobile app usage and customer retention?
+4. How does competitor activity impact our customer behavior?
+5. Are there geographic differences in price sensitivity?
+6. What factors most strongly predict customer churn?
+7. How do promotions affect customer visit patterns?
+8. What is the optimal wait time threshold for maintaining satisfaction?
+
+## Hypotheses to Test
+- Loyalty program members have significantly higher lifetime value
+- Mobile app users are more resistant to competitor switching
+- Wait times above 5 minutes significantly impact satisfaction
+- Regional differences in consumer preferences are statistically significant
+- Price promotions increase short-term visits but may reduce long-term value
+- Seasonal patterns vary significantly by geography
+
+## Areas of Interest
+- Customer segmentation and profiling
+- Churn prediction and prevention
+- Revenue optimization strategies
+- Competitive positioning
+- Geographic market differences
+- Operational efficiency (wait times, service quality)
+- Marketing effectiveness (promotions, loyalty programs)
+- Digital transformation impact (mobile app, online ordering)
+
+## Success Criteria
+- Identify at least 3 actionable insights with statistical significance (p < 0.05)
+- Quantify the impact of key variables on customer lifetime value
+- Provide evidence-based recommendations for business strategy
+- Support findings with both data analysis and literature review
