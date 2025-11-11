@@ -1,0 +1,11 @@
+{
+  "analysis_id": "cbd71fd4",
+  "question": "What are the key attributes of customers who exhibit high spending behavior in the coffee shop chain business?",
+  "code": "# Load necessary libraries\nimport pandas as pd\nimport numpy as np\nfrom scipy import stats\nimport matplotlib.pyplot as plt\n\n# Load data\ncustomers = pd.read_csv('data/customers.csv')\ntransactions = pd.read_csv('data/transactions.csv')\n\n# Merge data\nmerged_data = pd.merge(customers, transactions, on='customer_id', how='inner')\n\n# Filter high spending customers\nhigh_spending_customers = merged_data[merged_data['amount'] > merged_data['amount'].mean()]\n\n# Statistical analysis\nmean_age = high_spending_customers['age'].mean()\ntotal_spending = high_spending_customers['amount'].sum()\ncorrelation_income_spending = high_spending_customers['income'].corr(high_spending_customers['amount'])\n\n# Save plots\nplt.figure(figsize=(8, 6))\nplt.scatter(high_spending_customers['age'], high_spending_customers['amount'])\nplt.xlabel('Age')\nplt.ylabel('Amount Spent')\nplt.title('Age vs. Amount Spent for High Spending Customers')\nplt.savefig('outputs/analyses/high_spending_age_amount.png')\nplt.close()\n\n# Summary dictionary\nsummary = {\n    'mean_age_high_spending_customers': mean_age,\n    'total_spending_high_spending_customers': total_spending,\n    'correlation_income_spending_high_spending_customers': correlation_income_spending\n}\n\nsummary",
+  "output": "",
+  "summary": {
+    "mean_age_high_spending_customers": 35.52647976447862,
+    "total_spending_high_spending_customers": 8249785.360000001,
+    "correlation_income_spending_high_spending_customers": 6.464905012571269e-05
+  }
+}

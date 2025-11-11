@@ -1,0 +1,13 @@
+{
+  "analysis_id": "51b34f0d",
+  "question": "What is the impact of loyalty program membership duration on customer satisfaction and retention rates?",
+  "code": "# Load necessary libraries\nimport pandas as pd\nimport numpy as np\nfrom scipy.stats import ttest_ind\n\n# Load data\ncustomers = pd.read_csv('data/customers.csv')\ntransactions = pd.read_csv('data/transactions.csv')\n\n# Merge data on customer_id\nmerged_data = pd.merge(customers, transactions, on='customer_id')\n\n# Filter data for loyalty program members\nloyalty_members = merged_data[merged_data['loyalty_member'] == 1]\n\n# Filter data for non-loyalty program members\nnon_loyalty_members = merged_data[merged_data['loyalty_member'] == 0]\n\n# T-test for satisfaction scores between loyalty members and non-members\nt_stat, p_val = ttest_ind(loyalty_members['satisfaction_score'], non_loyalty_members['satisfaction_score'], equal_var=False)\n\n# Calculate retention rates for loyalty program members and non-members\nretention_rate_loyalty = loyalty_members['customer_id'].nunique() / customers[customers['loyalty_member'] == 1]['customer_id'].nunique()\nretention_rate_non_loyalty = non_loyalty_members['customer_id'].nunique() / customers[customers['loyalty_member'] == 0]['customer_id'].nunique()\n\n# Summary dictionary with findings\nsummary = {\n    'loyalty_members_mean_satisfaction': loyalty_members['satisfaction_score'].mean(),\n    'non_loyalty_members_mean_satisfaction': non_loyalty_members['satisfaction_score'].mean(),\n    'p_value_satisfaction_ttest': p_val,\n    'retention_rate_loyalty': retention_rate_loyalty,\n    'retention_rate_non_loyalty': retention_rate_non_loyalty\n}\n\n# Save plots to outputs/analyses/ (if any)\n\nsummary",
+  "output": "",
+  "summary": {
+    "loyalty_members_mean_satisfaction": 4.328109512886693,
+    "non_loyalty_members_mean_satisfaction": 4.160691944393021,
+    "p_value_satisfaction_ttest": 0.0,
+    "retention_rate_loyalty": 1.0,
+    "retention_rate_non_loyalty": 1.0
+  }
+}
