@@ -1,0 +1,112 @@
+{
+  "dataset_path": "data/customers.csv",
+  "schema": {
+    "total_columns": 9,
+    "numeric_columns": [
+      "customer_id",
+      "age",
+      "income",
+      "loyalty_member",
+      "mobile_app_user"
+    ],
+    "categorical_columns": [
+      "city",
+      "region",
+      "signup_date",
+      "preferred_time"
+    ],
+    "datetime_columns": [],
+    "sample_values": {
+      "customer_id": [
+        1,
+        2,
+        3
+      ],
+      "city": [
+        "New York",
+        "New York",
+        "New York"
+      ],
+      "region": [
+        "Northeast",
+        "Northeast",
+        "Northeast"
+      ],
+      "age": [
+        40.9605698361348,
+        38.348495506401655,
+        29.36630736878057
+      ],
+      "income": [
+        45746.37576957643,
+        81247.68783756618,
+        64297.75671290823
+      ]
+    },
+    "dataset_shape": [
+      4992,
+      9
+    ],
+    "column_descriptions": {
+      "customer_id": {
+        "dtype": "int64",
+        "null_count": 0,
+        "unique_values": "100+"
+      },
+      "city": {
+        "dtype": "object",
+        "null_count": 0,
+        "unique_values": 12
+      },
+      "region": {
+        "dtype": "object",
+        "null_count": 0,
+        "unique_values": 4
+      },
+      "age": {
+        "dtype": "float64",
+        "null_count": 0,
+        "unique_values": "100+"
+      },
+      "income": {
+        "dtype": "float64",
+        "null_count": 0,
+        "unique_values": "100+"
+      },
+      "loyalty_member": {
+        "dtype": "bool",
+        "null_count": 0,
+        "unique_values": 2
+      },
+      "signup_date": {
+        "dtype": "object",
+        "null_count": 0,
+        "unique_values": "100+"
+      },
+      "preferred_time": {
+        "dtype": "object",
+        "null_count": 0,
+        "unique_values": 3
+      },
+      "mobile_app_user": {
+        "dtype": "bool",
+        "null_count": 0,
+        "unique_values": 2
+      }
+    }
+  },
+  "initial_research_questions": [
+    "What is the relationship between customer_id and age?",
+    "What is the relationship between customer_id and income?",
+    "What is the relationship between customer_id and loyalty_member?",
+    "What is the relationship between age and income?",
+    "What is the relationship between age and loyalty_member?",
+    "What is the relationship between income and loyalty_member?",
+    "How does city affect customer_id?",
+    "How does city affect age?",
+    "How does region affect customer_id?",
+    "How does region affect age?"
+  ],
+  "discoveries": [],
+  "analyzed_questions": []
+}
