@@ -594,8 +594,8 @@ def search_literature_llm(query: str, api_key: str, model: str) -> Optional[Dict
         return None
 
 def synthesize_discoveries_llm(analyses: List[Dict], literature: List[Dict], cycle: int,
-                               api_key: str, model: str) -> Dict:
-    """Synthesize discoveries using LLM with actual statistical results"""
+                               api_key: str, model: str, world_model_context: str = "") -> Dict:
+    """Synthesize discoveries using LLM with actual statistical results and world model context"""
     if not api_key:
         return {
             'discoveries': [],
@@ -645,9 +645,26 @@ def synthesize_discoveries_llm(analyses: List[Dict], literature: List[Dict], cyc
             for l in literature
         ]) if literature else "No literature reviewed this cycle."
 
-        prompt = f"""Synthesize key discoveries from this research cycle's findings.
+        # Build context section
+        context_section = ""
+        if world_model_context and cycle > 1:
+            context_section = f"""
 
-STATISTICAL ANALYSES WITH ACTUAL RESULTS:
+PREVIOUS DISCOVERIES & WORLD MODEL CONTEXT:
+{world_model_context}
+
+SYNTHESIS GUIDANCE:
+- Compare new findings against previous discoveries
+- Note if findings SUPPORT, CONTRADICT, or EXTEND previous work
+- Build on cumulative knowledge - don't just repeat what we already know
+- Identify novel patterns not seen in earlier cycles
+- Update or refine understanding based on new evidence
+"""
+
+        prompt = f"""Synthesize key discoveries from this research cycle's findings.
+{context_section}
+
+STATISTICAL ANALYSES WITH ACTUAL RESULTS (Current Cycle):
 {analyses_text}
 
 LITERATURE REVIEWED:
@@ -658,18 +675,20 @@ IMPORTANT CONSTRAINTS:
 2. DO NOT make up or estimate any numbers
 3. DO NOT add percentage improvements or effect sizes unless explicitly stated above
 4. Focus on patterns supported by the actual p-values, correlations, and effect sizes shown
+5. If comparing to previous discoveries, note whether new findings support/contradict/extend them
 
 Return a JSON object with discoveries that:
-- Cite ONLY the actual statistical values from above
+- Cite ONLY the actual statistical values from current cycle's analyses
 - State the finding clearly and what it means
 - Include the real statistical support (copy exact values from above)
+- If relevant, mention how this relates to previous discoveries (supports/contradicts/extends)
 
 Format:
 {{
   "discoveries": [
     {{
       "title": "Brief discovery title",
-      "description": "What was found and why it matters (cite ACTUAL stats only)",
+      "description": "What was found and why it matters (cite ACTUAL stats only). If relevant: how this relates to previous findings.",
       "statistical_support": "Exact statistics from above (e.g., r=0.234, p=0.0012, n=4992)",
       "confidence": 0.95
     }}
@@ -682,11 +701,11 @@ Return ONLY valid JSON. DO NOT fabricate statistics."""
         response = openai.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": "You are a rigorous research scientist who ONLY cites actual statistical results. You never make up numbers or percentages."},
+                {"role": "system", "content": "You are a rigorous research scientist who ONLY cites actual statistical results. You never make up numbers or percentages. You build cumulative knowledge by comparing new findings with previous discoveries, noting whether they support, contradict, or extend prior work."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,  # Lower temperature for more factual responses
-            max_tokens=1000
+            max_tokens=1500  # Increased to allow for richer context-aware synthesis
         )
 
         response_text = response.choices[0].message.content.strip()
@@ -825,7 +844,9 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
 
     # Step 3: Synthesize discoveries
     if use_llm and api_key and cycle_analyses:
-        synthesis = synthesize_discoveries_llm(cycle_analyses, cycle_literature, cycle_num, api_key, model)
+        # Generate context for comparison with previous discoveries
+        world_model_context = wm.generate_context_summary() if cycle_num > 1 else ""
+        synthesis = synthesize_discoveries_llm(cycle_analyses, cycle_literature, cycle_num, api_key, model, world_model_context)
 
         # Add LLM-synthesized discoveries (with deduplication)
         for disc_data in synthesis.get('discoveries', []):
