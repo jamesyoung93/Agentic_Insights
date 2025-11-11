@@ -1,0 +1,25 @@
+{
+  "id": "paper_001",
+  "title": "Customer Loyalty Dynamics in Quick-Service Retail: A Time Series Analysis",
+  "authors": [
+    "Smith, J.",
+    "Johnson, K.",
+    "Williams, R."
+  ],
+  "year": 2023,
+  "journal": "Journal of Retail Analytics",
+  "abstract": "This study examines customer loyalty patterns in quick-service retail environments. Using 18 months of transaction data from 3,200 customers, we find that loyalty program members visit 2.3x more frequently and have 34% higher lifetime value. Mobile app usage correlates strongly with retention (r=0.67, p<0.001).",
+  "key_findings": [
+    "Loyalty members visit 2.3x more frequently than non-members",
+    "Mobile app usage increases retention by 34%",
+    "Morning customers have 12% higher satisfaction scores",
+    "Wait times above 7 minutes correlate with 22% drop in return visits"
+  ],
+  "methods": "Longitudinal analysis, regression modeling, customer segmentation",
+  "keywords": [
+    "customer loyalty",
+    "retention",
+    "mobile apps",
+    "quick service"
+  ]
+}

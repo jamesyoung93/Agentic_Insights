@@ -1,0 +1,25 @@
+{
+  "id": "paper_006",
+  "title": "Wait Time Management and Customer Satisfaction in Quick-Service Environments",
+  "authors": [
+    "Garcia, F.",
+    "Taylor, N.",
+    "Wilson, D."
+  ],
+  "year": 2024,
+  "journal": "Operations Management Review",
+  "abstract": "Study of 125,000 customer interactions reveals non-linear relationship between wait time and satisfaction. Satisfaction drops sharply after 5-minute threshold (slope change: -0.3 to -0.8 points/minute). Mobile order-ahead reduces wait by average 3.2 minutes and improves satisfaction by 18%.",
+  "key_findings": [
+    "Critical wait time threshold: 5 minutes",
+    "Satisfaction decline accelerates after threshold (-0.8 pts/min)",
+    "Mobile order-ahead reduces wait by 3.2 minutes (40%)",
+    "Peak hours (7-9 AM) show highest wait-satisfaction correlation"
+  ],
+  "methods": "Non-linear regression, queuing theory, time-motion studies",
+  "keywords": [
+    "wait time",
+    "customer satisfaction",
+    "operations",
+    "service quality"
+  ]
+}
