@@ -25,43 +25,143 @@ class AutoEnhancedReportGenerator:
     def extract_statistics_from_trajectory(self, trajectory_data: Dict) -> List[Dict]:
         """Extract statistical evidence from a trajectory"""
         stats = []
-        
+
         # Look for common statistical patterns in outputs
         if 'outputs' in trajectory_data:
-            for output in trajectory_data['outputs']:
-                if isinstance(output, dict):
-                    # Check for statistical values
-                    for key, value in output.items():
-                        if any(stat_word in key.lower() for stat_word in 
-                               ['p_value', 'pvalue', 'p-value', 'correlation', 'coefficient', 
-                                't_stat', 'z_score', 'effect_size', 'confidence']):
-                            stats.append({
-                                'type': key,
-                                'value': value,
-                                'source': trajectory_data.get('id', 'unknown')
-                            })
-        
+            outputs = trajectory_data['outputs']
+
+            # Handle dict of dicts structure (from streamlit_app_ULTIMATE.py)
+            if isinstance(outputs, dict):
+                for finding_key, finding_stats in outputs.items():
+                    if isinstance(finding_stats, dict):
+                        # Extract all statistical measures for this finding
+                        formatted_stats = self._format_finding_statistics(finding_key, finding_stats)
+                        if formatted_stats:
+                            stats.extend(formatted_stats)
+            # Handle list structure (legacy support)
+            elif isinstance(outputs, list):
+                for output in outputs:
+                    if isinstance(output, dict):
+                        for key, value in output.items():
+                            if any(stat_word in key.lower() for stat_word in
+                                   ['p_value', 'pvalue', 'p-value', 'correlation', 'coefficient',
+                                    't_stat', 'z_score', 'effect_size', 'confidence']):
+                                stats.append({
+                                    'type': key,
+                                    'value': value,
+                                    'source': trajectory_data.get('id', 'unknown')
+                                })
+
         return stats
+
+    def _format_finding_statistics(self, finding_key: str, stats_dict: Dict) -> List[Dict]:
+        """Format statistics for a specific finding"""
+        formatted = []
+
+        # Create a readable finding name
+        finding_name = finding_key.replace('_', ' ').title()
+
+        # Extract and format each statistic
+        if 'p_value' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - p-value",
+                'value': f"{stats_dict['p_value']:.4f}" if isinstance(stats_dict['p_value'], (int, float)) else stats_dict['p_value'],
+                'source': finding_key
+            })
+
+        if 'correlation' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - Correlation",
+                'value': f"r = {stats_dict['correlation']:.3f}" if isinstance(stats_dict['correlation'], (int, float)) else stats_dict['correlation'],
+                'source': finding_key
+            })
+
+        if 't_statistic' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - t-statistic",
+                'value': f"t = {stats_dict['t_statistic']:.3f}" if isinstance(stats_dict['t_statistic'], (int, float)) else stats_dict['t_statistic'],
+                'source': finding_key
+            })
+
+        if 'f_statistic' in stats_dict:
+            df_between = stats_dict.get('df_between', '?')
+            df_within = stats_dict.get('df_within', '?')
+            formatted.append({
+                'type': f"{finding_name} - F-statistic",
+                'value': f"F({df_between}, {df_within}) = {stats_dict['f_statistic']:.3f}" if isinstance(stats_dict['f_statistic'], (int, float)) else stats_dict['f_statistic'],
+                'source': finding_key
+            })
+
+        if 'cohens_d' in stats_dict:
+            effect_label = stats_dict.get('effect_size_label', '')
+            formatted.append({
+                'type': f"{finding_name} - Effect Size (Cohen's d)",
+                'value': f"d = {stats_dict['cohens_d']:.3f} ({effect_label})" if isinstance(stats_dict['cohens_d'], (int, float)) else stats_dict['cohens_d'],
+                'source': finding_key
+            })
+
+        if 'eta_squared' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - Effect Size (η²)",
+                'value': f"η² = {stats_dict['eta_squared']:.3f}" if isinstance(stats_dict['eta_squared'], (int, float)) else stats_dict['eta_squared'],
+                'source': finding_key
+            })
+
+        if 'r_squared' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - R²",
+                'value': f"R² = {stats_dict['r_squared']:.3f}" if isinstance(stats_dict['r_squared'], (int, float)) else stats_dict['r_squared'],
+                'source': finding_key
+            })
+
+        if 'slope' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - Regression Slope",
+                'value': f"β = {stats_dict['slope']:.4f}" if isinstance(stats_dict['slope'], (int, float)) else stats_dict['slope'],
+                'source': finding_key
+            })
+
+        if 'n' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - Sample Size",
+                'value': f"n = {stats_dict['n']}" if isinstance(stats_dict['n'], (int, float)) else stats_dict['n'],
+                'source': finding_key
+            })
+
+        # Add interpretation if available
+        if 'interpretation' in stats_dict:
+            formatted.append({
+                'type': f"{finding_name} - Interpretation",
+                'value': stats_dict['interpretation'],
+                'source': finding_key
+            })
+
+        return formatted
     
     def format_discovery_with_stats(self, discovery: Dict, stats: List[Dict]) -> str:
         """Format a discovery with its supporting statistics"""
         formatted = f"\n{'='*80}\n"
         formatted += f"DISCOVERY: {discovery.get('title', 'Untitled Discovery')}\n"
         formatted += f"{'='*80}\n\n"
-        
+
         # Summary
         formatted += "SUMMARY:\n"
         formatted += f"{discovery.get('summary', 'No summary available')}\n\n"
-        
-        # Statistical Evidence
+
+        # Statistical Support (from LLM synthesis or direct stats)
+        if discovery.get('statistical_support'):
+            formatted += "STATISTICAL SUPPORT:\n"
+            formatted += "-" * 80 + "\n"
+            formatted += f"{discovery['statistical_support']}\n\n"
+
+        # Detailed Statistical Evidence (from trajectories)
         if stats:
-            formatted += "STATISTICAL EVIDENCE:\n"
+            formatted += "DETAILED STATISTICAL EVIDENCE:\n"
             formatted += "-" * 80 + "\n"
             for i, stat in enumerate(stats, 1):
                 formatted += f"{i}. {stat['type']}: {stat['value']}\n"
-                formatted += f"   Source: {stat['source']}\n"
             formatted += "\n"
-        else:
+        elif not discovery.get('statistical_support'):
             formatted += "STATISTICAL EVIDENCE: Statistical details not available.\n\n"
         
         # Methodology

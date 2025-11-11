@@ -440,7 +440,7 @@ def search_literature_llm(query: str, api_key: str, model: str) -> Optional[Dict
 
 def synthesize_discoveries_llm(analyses: List[Dict], literature: List[Dict], cycle: int,
                                api_key: str, model: str) -> Dict:
-    """Synthesize discoveries using LLM"""
+    """Synthesize discoveries using LLM with actual statistical results"""
     if not api_key:
         return {
             'discoveries': [],
@@ -450,11 +450,40 @@ def synthesize_discoveries_llm(analyses: List[Dict], literature: List[Dict], cyc
     try:
         openai.api_key = api_key
 
-        # Prepare summaries
-        analyses_summary = "\n".join([
-            f"- {a.get('question', 'Unknown')}: {list(a.get('findings', {}).keys())}"
-            for a in analyses
-        ])
+        # Prepare detailed statistical summaries with actual numbers
+        analyses_summary = []
+        for a in analyses:
+            question = a.get('question', 'Unknown')
+            analyses_summary.append(f"\nQuestion: {question}")
+
+            # Add actual statistical findings
+            for finding_key, finding_data in a.get('findings', {}).items():
+                if finding_data.get('significant', False):
+                    analyses_summary.append(f"  - Finding: {finding_data.get('description', 'N/A')}")
+
+                    # Get the actual statistics
+                    stats = a.get('statistical_evidence', {}).get(finding_key, {})
+                    if stats:
+                        stat_details = []
+                        if 'p_value' in stats:
+                            stat_details.append(f"p={stats['p_value']:.4f}")
+                        if 'correlation' in stats:
+                            stat_details.append(f"r={stats['correlation']:.3f}")
+                        if 't_statistic' in stats:
+                            stat_details.append(f"t={stats['t_statistic']:.3f}")
+                        if 'f_statistic' in stats:
+                            stat_details.append(f"F={stats['f_statistic']:.3f}")
+                        if 'cohens_d' in stats:
+                            stat_details.append(f"d={stats['cohens_d']:.3f}")
+                        if 'r_squared' in stats:
+                            stat_details.append(f"R²={stats['r_squared']:.3f}")
+                        if 'n' in stats:
+                            stat_details.append(f"n={stats['n']}")
+
+                        if stat_details:
+                            analyses_summary.append(f"    Stats: {', '.join(stat_details)}")
+
+        analyses_text = "\n".join(analyses_summary)
 
         literature_summary = "\n".join([
             f"- Paper: {l.get('query', 'Unknown')}"
@@ -463,40 +492,46 @@ def synthesize_discoveries_llm(analyses: List[Dict], literature: List[Dict], cyc
 
         prompt = f"""Synthesize key discoveries from this research cycle's findings.
 
-STATISTICAL ANALYSES PERFORMED:
-{analyses_summary}
+STATISTICAL ANALYSES WITH ACTUAL RESULTS:
+{analyses_text}
 
 LITERATURE REVIEWED:
 {literature_summary}
 
-Identify:
-1. Key discoveries supported by statistical evidence
-2. Novel patterns or insights from the data
-3. New hypotheses to test in future cycles
+IMPORTANT CONSTRAINTS:
+1. You MUST ONLY reference the EXACT statistical values provided above
+2. DO NOT make up or estimate any numbers
+3. DO NOT add percentage improvements or effect sizes unless explicitly stated above
+4. Focus on patterns supported by the actual p-values, correlations, and effect sizes shown
 
-Return a JSON object:
+Return a JSON object with discoveries that:
+- Cite ONLY the actual statistical values from above
+- State the finding clearly and what it means
+- Include the real statistical support (copy exact values from above)
+
+Format:
 {{
   "discoveries": [
     {{
       "title": "Brief discovery title",
-      "description": "What was found and why it matters",
-      "statistical_support": "Key statistics supporting this",
+      "description": "What was found and why it matters (cite ACTUAL stats only)",
+      "statistical_support": "Exact statistics from above (e.g., r=0.234, p=0.0012, n=4992)",
       "confidence": 0.95
     }}
   ],
-  "hypotheses": ["Hypothesis 1", "Hypothesis 2"]
+  "hypotheses": ["Hypothesis 1 for future testing", "Hypothesis 2"]
 }}
 
-Focus on statistically significant findings (p<0.05). Return ONLY valid JSON."""
+Return ONLY valid JSON. DO NOT fabricate statistics."""
 
         response = openai.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": "You synthesize scientific discoveries from data analysis."},
+                {"role": "system", "content": "You are a rigorous research scientist who ONLY cites actual statistical results. You never make up numbers or percentages."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7,
-            max_tokens=800
+            temperature=0.3,  # Lower temperature for more factual responses
+            max_tokens=1000
         )
 
         response_text = response.choices[0].message.content.strip()
@@ -609,13 +644,15 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
                 confidence=disc_data.get('confidence', 0.9)
             )
 
+            # Store discovery with statistical evidence for report generation
             state['discoveries'].append({
                 'title': discovery.title,
                 'summary': discovery.summary,
                 'evidence': discovery.evidence,
                 'cycle': cycle_num,
                 'trajectory_ids': discovery.trajectory_ids,
-                'confidence': discovery.confidence
+                'confidence': discovery.confidence,
+                'statistical_support': disc_data.get('statistical_support', '')
             })
 
             log_message(f"  💡 Discovery: {discovery.title}", "success")
@@ -654,13 +691,34 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
                         confidence=0.95 if stats.get('p_value', 1) < 0.01 else 0.90
                     )
 
+                    # Create statistical support summary
+                    stat_summary_parts = []
+                    if 'correlation' in stats:
+                        stat_summary_parts.append(f"r={stats['correlation']:.3f}")
+                    if 'p_value' in stats:
+                        stat_summary_parts.append(f"p={stats['p_value']:.4f}")
+                    if 't_statistic' in stats:
+                        stat_summary_parts.append(f"t={stats['t_statistic']:.3f}")
+                    if 'f_statistic' in stats:
+                        stat_summary_parts.append(f"F={stats['f_statistic']:.3f}")
+                    if 'cohens_d' in stats:
+                        stat_summary_parts.append(f"d={stats['cohens_d']:.3f}")
+                    if 'r_squared' in stats:
+                        stat_summary_parts.append(f"R²={stats['r_squared']:.3f}")
+                    if 'n' in stats:
+                        stat_summary_parts.append(f"n={stats['n']}")
+
+                    stat_summary = ', '.join(stat_summary_parts) if stat_summary_parts else 'See evidence list'
+
                     state['discoveries'].append({
                         'title': discovery.title,
                         'summary': discovery.summary,
                         'evidence': discovery.evidence,
                         'cycle': cycle_num,
                         'trajectory_ids': discovery.trajectory_ids,
-                        'confidence': discovery.confidence
+                        'confidence': discovery.confidence,
+                        'statistical_support': stat_summary,
+                        'statistical_details': stats  # Store full stats dict
                     })
 
                     log_message(f"  💡 Discovery: {discovery.title[:60]}...", "success")
