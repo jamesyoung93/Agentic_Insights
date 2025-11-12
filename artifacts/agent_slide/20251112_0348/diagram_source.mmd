@@ -1,0 +1,51 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#E8F4F8','primaryTextColor':'#2C3E50','primaryBorderColor':'#3498DB','lineColor':'#34495E','secondaryColor':'#ECF0F1','tertiaryColor':'#fff'}}}%%
+graph LR
+    subgraph Sources["📥 SOURCES"]
+        CSV[(CSV Data)]
+        USER[User Input]
+        LIT[(Literature)]
+    end
+
+    subgraph Processing["⚙️ PROCESSING"]
+        ORCHESTRATOR{Streamlit<br/>Orchestrator}
+        STATS[Statistical<br/>Analysis]
+        LLM[LLM<br/>Gateway]
+        WM[World<br/>Model]
+    end
+
+    subgraph Storage["💾 STORAGE"]
+        WMDB[(World Model<br/>JSON)]
+        STATE[(Session<br/>State)]
+    end
+
+    subgraph Outputs["📤 OUTPUTS"]
+        DASH[Dashboard]
+        REPORTS[Reports]
+    end
+
+    %% Data flow edges (solid = verified)
+    CSV -->|CSV batch| ORCHESTRATOR
+    USER -->|params| ORCHESTRATOR
+    LIT -.->|papers| LLM
+
+    ORCHESTRATOR -->|questions| STATS
+    ORCHESTRATOR -->|prompts| LLM
+    STATS -->|results| WM
+    LLM -->|discoveries| WM
+
+    WM -->|JSON| WMDB
+    ORCHESTRATOR -->|state| STATE
+
+    WMDB -->|data| REPORTS
+    STATE -->|live data| DASH
+
+    %% Styling
+    classDef sourceStyle fill:#FFE6E6,stroke:#C0392B,stroke-width:2px
+    classDef processStyle fill:#E8F4F8,stroke:#3498DB,stroke-width:2px
+    classDef storeStyle fill:#FFF9E6,stroke:#F39C12,stroke-width:2px
+    classDef outputStyle fill:#E8F8F5,stroke:#27AE60,stroke-width:2px
+
+    class CSV,USER,LIT sourceStyle
+    class ORCHESTRATOR,STATS,LLM,WM processStyle
+    class WMDB,STATE storeStyle
+    class DASH,REPORTS outputStyle
