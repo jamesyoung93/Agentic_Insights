@@ -1,9 +1,15 @@
-component,path,key_functions,inputs,outputs,critical_deps
-streamlit_app_ULTIMATE.py,/home/user/Agentic_Insights/streamlit_app_ULTIMATE.py,"load_data, perform_statistical_analysis, run_discovery_cycle","data/customers.csv, data/competitor_data.csv, config.py","world_model.json, auto_enhanced_report.txt, session_state","streamlit, pandas, scipy, openai"
-world_model_builder.py,/home/user/Agentic_Insights/world_model_builder.py,"add_discovery, add_trajectory, save, load",cycle_data (from streamlit),world_model.json,"json, dataclasses"
-auto_enhanced_report.py,/home/user/Agentic_Insights/auto_enhanced_report.py,"extract_statistics_from_trajectory, generate_enhanced_report","discoveries, trajectories, world_model",auto_enhanced_report.txt,json
-agents/data_analyst.py,/home/user/Agentic_Insights/agents/data_analyst.py,"analyze, _generate_code, _execute_code","research_question, context, CSV files","outputs/analyses/*.py, analysis_results",openai
-agents/literature_searcher.py,/home/user/Agentic_Insights/agents/literature_searcher.py,"search, _find_relevant_papers, _extract_insights","query, knowledge/literature_index.json",literature_findings,openai
-config.py,/home/user/Agentic_Insights/config.py,N/A (configuration),None,"OPENAI_API_KEY, MODEL_NAME, settings",None
-data/customers.csv,/home/user/Agentic_Insights/data/customers.csv,N/A (data source),None,"Customer demographics, transactions",pandas
-data/competitor_data.csv,/home/user/Agentic_Insights/data/competitor_data.csv,N/A (data source),None,Competitor interaction data,pandas
+component,path,key_functions_classes,inputs,outputs,dependencies
+Streamlit App (Main Entry),streamlit_app_ULTIMATE.py,"main(), run_discovery_cycle(), perform_statistical_analysis(), generate_research_questions_llm(), synthesize_discoveries_llm()","CSV files (customers.csv, competitor_data.csv), OpenAI API key","Streamlit UI, Discovery cycles, Statistical analyses, Reports","streamlit, pandas, numpy, scipy, openai, auto_enhanced_report, world_model_builder, agents"
+World Model Builder,world_model_builder.py,"WorldModel, Discovery, Trajectory, add_discovery(), add_trajectory(), save(), load()","Discovery data, Trajectory data, Research questions","world_model.json, Context summaries, Model state","json, pathlib, datetime, dataclasses"
+Auto Enhanced Report Generator,auto_enhanced_report.py,"AutoEnhancedReportGenerator, generate_enhanced_report(), extract_statistics_from_trajectory()","Discoveries, Trajectories, World model","auto_enhanced_report.txt, Formatted reports","json, pathlib"
+Literature Search Agent,agents/literature_searcher.py,"LiteratureSearchAgent, search()","Research queries, OpenAI API","Literature findings, Paper summaries","openai, knowledge/literature/*.txt"
+Data Analyst Agent,agents/data_analyst.py,"Statistical analysis functions, Data processing","DataFrame, Analysis questions","Statistical test results, P-values, Effect sizes","pandas, numpy, scipy, statsmodels"
+World Model (Agent),agents/world_model.py,"Agent-specific world model, State management","Discovery context","Agent state, Memory","dataclasses"
+Data Ingestion Layer,streamlit_app_ULTIMATE.py,"load_data(), generate_sample_data(), _sanitize_for_analysis()","data/customers.csv, data/competitor_data.csv","Cleaned DataFrame, Merged datasets","pandas, numpy"
+Statistical Analysis Engine,streamlit_app_ULTIMATE.py,"perform_statistical_analysis(), Pearson correlation, Linear regression, ANOVA, t-tests","DataFrame, Research questions","Statistical evidence (p-values, correlations, effect sizes)","scipy.stats, numpy"
+Discovery Synthesis,streamlit_app_ULTIMATE.py,"synthesize_discoveries_llm(), is_similar_discovery()","Statistical analyses, Literature results, LLM responses","Discoveries with evidence, Hypotheses","openai"
+Report Generation,auto_enhanced_report.py,"generate_from_cycle_data(), format_discovery_with_stats()","Cycle results, Discoveries, Trajectories","Enhanced text reports with statistical evidence","pathlib"
+UI Layer,streamlit_app_ULTIMATE.py,"Streamlit tabs, Sidebar controls, Progress tracking, Log display","User inputs, Discovery state","Web interface, Visualizations, Downloads","streamlit"
+CSV Data Sources,data/,"customers.csv, competitor_data.csv","External data collection","Customer records, Competitor metrics","N/A"
+Literature Knowledge Base,knowledge/literature/,paper_*.txt files,Curated research papers,Text content for literature search,"N/A"
+Configuration,config.py,"API key storage, Settings","User configuration","OPENAI_API_KEY, Settings","N/A"
