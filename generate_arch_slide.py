@@ -1,12 +1,12 @@
 """
-Generate Architecture Overview PowerPoint Slide
-Constraint-compliant consulting-style diagram
+Generate Architecture Overview PowerPoint Slide (Fixed)
+Simplified and more robust approach
 """
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 import json
 
@@ -20,8 +20,8 @@ prs.slide_width = Inches(13.333)
 prs.slide_height = Inches(7.5)
 
 # Add blank slide
-slide_layout = prs.slide_layouts[6]  # Blank layout
-slide = prs.slides.add_slide(slide_layout)
+blank_layout = prs.slide_layouts[6]  # Blank layout
+slide = prs.slides.add_slide(blank_layout)
 
 # Color palette (grayscale + blue accent)
 COLOR_TITLE = RGBColor(31, 56, 100)
@@ -33,94 +33,72 @@ COLOR_TEXT = RGBColor(33, 33, 33)
 COLOR_EDGE = RGBColor(66, 66, 66)
 
 # Fonts
-FONT_TITLE = 'Calibri'
-FONT_BODY = 'Calibri'
+FONT_NAME = 'Calibri'
 
 # Grid layout (6 columns)
 MARGIN_LEFT = Inches(0.4)
-MARGIN_TOP = Inches(1.2)
-COL_WIDTH = Inches(2.0)
-COL_SPACING = Inches(0.15)
-ROW_HEIGHT = Inches(0.65)
-ROW_SPACING = Inches(0.3)
+MARGIN_TOP = Inches(1.3)
+COL_WIDTH = Inches(1.9)
+COL_SPACING = Inches(0.2)
+ROW_HEIGHT = Inches(0.7)
+ROW_SPACING = Inches(0.35)
 
 # ============================================================================
-# TITLE
+# TITLE & CAPTION
 # ============================================================================
 title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(12), Inches(0.5))
 title_frame = title_box.text_frame
 title_frame.text = "Data to Discovery: System Architecture"
 title_para = title_frame.paragraphs[0]
-title_para.font.name = FONT_TITLE
+title_para.font.name = FONT_NAME
 title_para.font.size = Pt(36)
 title_para.font.bold = True
 title_para.font.color.rgb = COLOR_TITLE
 title_para.alignment = PP_ALIGN.LEFT
 
-# Subtitle/Caption
 caption_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.8), Inches(12), Inches(0.3))
 caption_frame = caption_box.text_frame
 caption_frame.text = "Autonomous discovery through statistical analysis, agent orchestration, and LLM synthesis"
 caption_para = caption_frame.paragraphs[0]
-caption_para.font.name = FONT_BODY
+caption_para.font.name = FONT_NAME
 caption_para.font.size = Pt(16)
 caption_para.font.italic = True
 caption_para.font.color.rgb = COLOR_TEXT
 caption_para.alignment = PP_ALIGN.LEFT
 
 # ============================================================================
-# NODE POSITIONING (Swimlane-based)
+# NODE POSITIONING
 # ============================================================================
 node_positions = {}
 
-# Swimlane 1: Sources (Column 0)
-swimlane_sources = [
-    ('csv_data', 0, 0, "CSV Data"),
+# Define all nodes with (id, col, row, label)
+all_nodes = [
+    # Sources (Column 0)
+    ('csv_data', 0, 0, "CSV\nData"),
     ('literature_store', 0, 1, "Literature\nStore"),
     ('config', 0, 2, "Config"),
-]
 
-# Swimlane 2: Processing (Column 1)
-swimlane_processing = [
+    # Processing (Column 1)
     ('streamlit_ui', 1, 0, "Streamlit\nUI"),
-    ('kosmos_framework', 1, 2, "Kosmos\nFramework"),
-]
+    ('kosmos_framework', 1, 2, "Kosmos\nCLI"),
 
-# Swimlane 3: Agents (Column 2)
-swimlane_agents = [
+    # Agents (Column 2)
     ('data_analyst', 2, 0, "Data\nAnalyst"),
     ('lit_search_agent', 2, 1, "Literature\nAgent"),
     ('world_model', 2, 2, "World\nModel"),
-]
 
-# Swimlane 4: External (Column 3)
-swimlane_external = [
+    # External (Column 3)
     ('openai_api', 3, 1, "OpenAI\nAPI"),
-]
 
-# Swimlane 5: Storage (Column 4)
-swimlane_storage = [
-    ('world_model_state', 4, 2, "World Model\nJSON"),
-]
+    # Storage (Column 4)
+    ('world_model_state', 4, 2, "State\nJSON"),
 
-# Swimlane 6: Outputs (Column 5)
-swimlane_outputs = [
-    ('enhanced_report', 5, 1, "Enhanced\nReport"),
+    # Outputs (Column 5)
+    ('enhanced_report', 5, 1, "Report\nTXT"),
     ('analysis_artifacts', 5, 2, "Analysis\nCode"),
 ]
 
-all_nodes = (swimlane_sources + swimlane_processing + swimlane_agents +
-             swimlane_external + swimlane_storage + swimlane_outputs)
-
-# Shape mapping (use available shapes in python-pptx)
-shape_map = {
-    'cylinder': MSO_SHAPE.CAN,  # Can shape represents datastore
-    'rectangle': MSO_SHAPE.ROUNDED_RECTANGLE,
-    'hexagon': MSO_SHAPE.HEXAGON,
-    'parallelogram': MSO_SHAPE.PARALLELOGRAM,
-}
-
-# Color mapping
+# Color mapping function
 def get_node_color(node_type):
     if node_type == 'datastore':
         return COLOR_DATASTORE
@@ -147,37 +125,47 @@ for node_id, col, row, label in all_nodes:
     width = COL_WIDTH
     height = ROW_HEIGHT
 
-    node_positions[node_id] = (left + width/2, top + height/2)
+    # Store center position for connectors
+    node_positions[node_id] = {
+        'left': left,
+        'top': top,
+        'width': width,
+        'height': height,
+        'center_x': left + width / 2,
+        'center_y': top + height / 2
+    }
 
-    # Get shape type
-    shape_type = shape_map.get(node_data.get('shape', 'rectangle'), MSO_SHAPE.ROUNDED_RECTANGLE)
+    # Determine shape
+    shape_type_name = node_data.get('shape', 'rectangle')
+    if shape_type_name == 'cylinder' or node_data.get('type') == 'datastore':
+        shape_type = MSO_SHAPE.CAN
+    elif shape_type_name == 'hexagon' or node_data.get('type') == 'external':
+        shape_type = MSO_SHAPE.HEXAGON
+    elif shape_type_name == 'parallelogram' or node_data.get('type') in ['input', 'output']:
+        shape_type = MSO_SHAPE.PARALLELOGRAM
+    else:
+        shape_type = MSO_SHAPE.ROUNDED_RECTANGLE
 
     # Add shape
-    shape = slide.shapes.add_shape(
-        shape_type,
-        left, top, width, height
-    )
+    shape = slide.shapes.add_shape(shape_type, left, top, width, height)
 
-    # Fill
+    # Fill color
     fill_color = get_node_color(node_data.get('type', 'service'))
     shape.fill.solid()
     shape.fill.fore_color.rgb = fill_color
 
     # Border
     shape.line.color.rgb = COLOR_EDGE
-    shape.line.width = Pt(2)
+    shape.line.width = Pt(1.5)
 
     # Text
     text_frame = shape.text_frame
     text_frame.text = label
     text_frame.word_wrap = True
-    text_frame.margin_left = Pt(8)
-    text_frame.margin_right = Pt(8)
-    text_frame.margin_top = Pt(8)
-    text_frame.margin_bottom = Pt(8)
+    text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
 
     para = text_frame.paragraphs[0]
-    para.font.name = FONT_BODY
+    para.font.name = FONT_NAME
     para.font.size = Pt(16)
     para.font.bold = True
     para.font.color.rgb = COLOR_TEXT
@@ -186,9 +174,9 @@ for node_id, col, row, label in all_nodes:
     shapes[node_id] = shape
 
 # ============================================================================
-# EDGES (Arrows)
+# CONNECTORS (Arrows)
 # ============================================================================
-# Draw key edges (simplified to avoid clutter)
+# Key edges to display
 key_edges = [
     ('csv_data', 'streamlit_ui'),
     ('config', 'streamlit_ui'),
@@ -208,42 +196,63 @@ for from_id, to_id in key_edges:
     if from_id not in node_positions or to_id not in node_positions:
         continue
 
-    from_x, from_y = node_positions[from_id]
-    to_x, to_y = node_positions[to_id]
+    from_pos = node_positions[from_id]
+    to_pos = node_positions[to_id]
 
-    # Add connector
-    connector = slide.shapes.add_connector(
-        1,  # Straight connector
-        from_x, from_y,
-        to_x, to_y
-    )
+    # Calculate connector endpoints (from right edge to left edge)
+    from_x = from_pos['left'] + from_pos['width']
+    from_y = from_pos['center_y']
+    to_x = to_pos['left']
+    to_y = to_pos['center_y']
 
-    connector.line.color.rgb = COLOR_EDGE
-    connector.line.width = Pt(2)
+    # Add straight connector
+    try:
+        connector = slide.shapes.add_connector(
+            1,  # msoConnectorStraight
+            from_x, from_y,
+            to_x, to_y
+        )
+        connector.line.color.rgb = COLOR_EDGE
+        connector.line.width = Pt(1.5)
+    except Exception as e:
+        print(f"Warning: Could not add connector from {from_id} to {to_id}: {e}")
 
 # ============================================================================
-# LEGEND (Bottom Right)
+# LEGEND
 # ============================================================================
 legend_left = Inches(10.5)
-legend_top = Inches(5.5)
+legend_top = Inches(5.8)
 legend_width = Inches(2.5)
 
+# Legend background box (optional, makes it stand out)
+legend_bg = slide.shapes.add_shape(
+    MSO_SHAPE.ROUNDED_RECTANGLE,
+    legend_left - Inches(0.1),
+    legend_top - Inches(0.1),
+    legend_width + Inches(0.2),
+    Inches(1.4)
+)
+legend_bg.fill.solid()
+legend_bg.fill.fore_color.rgb = RGBColor(245, 245, 245)
+legend_bg.line.color.rgb = RGBColor(200, 200, 200)
+legend_bg.line.width = Pt(0.5)
+
 # Legend title
-legend_title_box = slide.shapes.add_textbox(legend_left, legend_top, legend_width, Inches(0.25))
-legend_title_frame = legend_title_box.text_frame
+legend_title = slide.shapes.add_textbox(legend_left, legend_top, legend_width, Inches(0.25))
+legend_title_frame = legend_title.text_frame
 legend_title_frame.text = "Legend"
 legend_title_para = legend_title_frame.paragraphs[0]
-legend_title_para.font.name = FONT_BODY
+legend_title_para.font.name = FONT_NAME
 legend_title_para.font.size = Pt(16)
 legend_title_para.font.bold = True
 legend_title_para.font.color.rgb = COLOR_TEXT
 
 # Legend items
 legend_items = [
-    ("■ Datastore", COLOR_DATASTORE),
-    ("■ Service/Module", COLOR_SERVICE),
-    ("■ External API", COLOR_EXTERNAL),
-    ("■ Input/Output", COLOR_OUTPUT),
+    ("● Datastore", COLOR_DATASTORE),
+    ("● Service/Module", COLOR_SERVICE),
+    ("● External API", COLOR_EXTERNAL),
+    ("● Input/Output", COLOR_OUTPUT),
 ]
 
 legend_y = legend_top + Inches(0.35)
@@ -252,49 +261,29 @@ for item_text, item_color in legend_items:
     item_frame = item_box.text_frame
     item_frame.text = item_text
     item_para = item_frame.paragraphs[0]
-    item_para.font.name = FONT_BODY
-    item_para.font.size = Pt(14)
+    item_para.font.name = FONT_NAME
+    item_para.font.size = Pt(13)
 
-    # Color the square
-    runs = item_para.runs
-    if runs:
-        runs[0].font.color.rgb = item_color
-        runs[0].font.size = Pt(18)
-        runs[0].font.bold = True
+    # Color the bullet
+    if item_para.runs:
+        item_para.runs[0].font.color.rgb = item_color
+        item_para.runs[0].font.size = Pt(16)
+        item_para.runs[0].font.bold = True
 
-    for i in range(1, len(runs)):
-        runs[i].font.color.rgb = COLOR_TEXT
+        for run in item_para.runs[1:]:
+            run.font.color.rgb = COLOR_TEXT
 
-    legend_y += Inches(0.23)
-
-# Line styles
-legend_y += Inches(0.1)
-line_legend_box = slide.shapes.add_textbox(legend_left, legend_y, legend_width, Inches(0.6))
-line_legend_frame = line_legend_box.text_frame
-line_legend_frame.text = "─── Verified link\n- - - Optional path"
-line_legend_para = line_legend_frame.paragraphs[0]
-line_legend_para.font.name = FONT_BODY
-line_legend_para.font.size = Pt(12)
-line_legend_para.font.color.rgb = COLOR_TEXT
+    legend_y += Inches(0.22)
 
 # ============================================================================
-# WORD COUNT CHECK
+# SAVE
 # ============================================================================
-total_words = 0
-# Count words in title
-total_words += len("Data to Discovery: System Architecture".split())
-# Count words in caption
-total_words += len("Autonomous discovery through statistical analysis, agent orchestration, and LLM synthesis".split())
-# Count words in node labels
-for _, _, _, label in all_nodes:
-    total_words += len(label.replace('\n', ' ').split())
+output_path = 'architecture_overview.pptx'
+prs.save(output_path)
 
-print(f"Total visible text: ~{total_words} words (constraint: ≤60)")
-
-# Save presentation
-prs.save('architecture_overview.pptx')
-print("✅ PowerPoint slide created: architecture_overview.pptx")
+print(f"✅ PowerPoint slide created: {output_path}")
 print(f"   - Nodes: {len(all_nodes)} (constraint: ≤12)")
 print(f"   - Edges shown: {len(key_edges)} (constraint: ≤16)")
-print(f"   - Format: 16:9")
+print(f"   - Format: 16:9 (13.333\" × 7.5\")")
 print(f"   - Style: Consulting-grade, diagram-first")
+print(f"   - File size: {len(open(output_path, 'rb').read()) / 1024:.1f} KB")
