@@ -1,6 +1,6 @@
-# Agentic Insights
+# Kosmos AI Scientist - Ultimate Edition
 
-Autonomous data-driven discovery system that generates rigorous, evidence-based reports through iterative analysis cycles. Built with Python and Streamlit.
+Autonomous data-driven discovery system using real statistical analysis (correlations, regressions, ANOVA, t-tests) combined with optional LLM-powered research question generation and synthesis. Built with Python, Streamlit, and SciPy.
 
 ## Quick Start
 
@@ -10,80 +10,58 @@ Autonomous data-driven discovery system that generates rigorous, evidence-based 
 pip install -r requirements.txt
 ```
 
-### Run the Web Interface
+### Run the App
 
 ```bash
-streamlit run streamlit_app_enhanced.py
+streamlit run streamlit_app_ULTIMATE.py
 ```
 
-### Run from Command Line
+The app will launch at `http://localhost:8501`
 
-```bash
-python main.py
+## How It Works
+
+1. **Statistical Analysis** - Real statistical tests on your data (Pearson correlations, linear regression, ANOVA, t-tests)
+2. **World Model** - Tracks all discoveries and maintains context across research cycles
+3. **Enhanced Reports** - Generates publication-quality reports with full statistical evidence
+4. **Optional LLM** - Add your OpenAI API key in the sidebar for intelligent question generation and discovery synthesis
+
+**Key Features:**
+- 📊 6+ statistical analysis methods with effect sizes
+- 🧠 World model for contextual discovery tracking
+- 📝 Publication-ready report generation
+- 🤖 Optional LLM integration (GPT-4, GPT-3.5-turbo)
+- 📁 Automatic sample data generation if no CSV provided
+- 💾 Persistent state across sessions
+
+## File Structure
+
+```
+├── streamlit_app_ULTIMATE.py    # Main application
+├── world_model_builder.py       # Discovery tracking and state management
+├── auto_enhanced_report.py      # Report generation
+├── config.py                    # Configuration (API keys)
+├── requirements.txt             # Dependencies
+├── data/                        # Sample datasets
+├── agents/                      # Optional agent modules
+├── knowledge/                   # Reference materials
+└── prompts/                     # LLM prompt templates
 ```
 
-## What's Included
+## Usage
 
-- **streamlit_app_enhanced.py** - Interactive web UI
-- **auto_enhanced_report.py** - Report generation with statistical evidence extraction
-- **world_model_builder.py** - Context management and state tracking
-- **main.py** - Command-line interface
-- **agents/** - Discovery agent modules (world model, data analyst, literature searcher)
-- **data/** - Sample datasets
-- **prompts/** - Agent prompt templates
-- **knowledge/** - Reference literature
+### Basic Usage (No API Key Required)
 
-## Core Features
+1. Open the app: `streamlit run streamlit_app_ULTIMATE.py`
+2. Configure your research objective in the sidebar
+3. Click "Start Discovery"
+4. View results in the Results and Discoveries tabs
+5. Download the enhanced report
 
-- 📊 Automated statistical analysis and evidence extraction
-- 🧠 Context-aware discovery through world models
-- 📝 Evidence-based report generation
-- 🖥️ Interactive Streamlit interface with real-time progress
-- 💾 Persistent state and cycle tracking
-- 🔍 Integrates multiple discovery agents
+### With LLM Features
 
-## Usage Example
-
-```python
-from world_model_builder import WorldModel
-from auto_enhanced_report import AutoEnhancedReportGenerator
-
-# Initialize world model
-wm = WorldModel()
-wm.set_objective("Analyze customer behavior patterns")
-
-# Run discovery cycle
-wm.increment_cycle()
-trajectory = wm.add_trajectory(
-    trajectory_type="data_analysis",
-    objective="Find correlations",
-    outputs={"correlation": 0.85, "p_value": 0.001}
-)
-
-# Record discovery
-wm.add_discovery(
-    title="Age-Product Correlation",
-    summary="Strong correlation detected",
-    evidence=["p < 0.001", "r = 0.85"],
-    trajectory_ids=[trajectory.id]
-)
-
-# Generate report
-generator = AutoEnhancedReportGenerator()
-report_path = generator.generate_enhanced_report(
-    discoveries=[d.to_dict() for d in wm.discoveries],
-    trajectories=[t.to_dict() for t in wm.trajectories],
-    world_model=wm.to_dict()
-)
-
-# Save state
-wm.save()
-```
-
-## Documentation
-
-- **START_HERE.md** - Quick start guide
-- **SETUP_INSTRUCTIONS.md** - Detailed setup and troubleshooting
+1. Get an OpenAI API key from https://platform.openai.com/api-keys
+2. Paste it in the sidebar under "OpenAI API Key"
+3. The app will use GPT for intelligent question generation and discovery synthesis
 
 ## Requirements
 
@@ -92,15 +70,22 @@ wm.save()
 - Pandas, NumPy, SciPy
 - OpenAI API (optional, for LLM features)
 
-See `requirements.txt` for full dependencies.
+See `requirements.txt` for exact versions.
+
+## Documentation
+
+- **START_HERE.md** - Quick start guide and feature overview
+- **SETUP_INSTRUCTIONS.md** - Detailed setup and troubleshooting
 
 ## Scientific Foundation
 
-Inspired by the Kosmos framework (arXiv:2511.02824v2) emphasizing:
-- Statistical rigor in analysis
-- Traceability of all claims
+Based on the Kosmos framework emphasizing:
+- Statistical rigor in all analysis
+- Traceability of claims to evidence
 - Explicit methodology documentation
-- Causal assessment standards
+- Proper causal assessment
+
+See arXiv:2511.02824v2 for details.
 
 ## License
 
