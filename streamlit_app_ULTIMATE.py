@@ -39,7 +39,7 @@ except ImportError as e:
 
 # Page configuration
 st.set_page_config(
-    page_title="Kosmos AI Scientist - Ultimate",
+    page_title="AI Scientist",
     page_icon="🔬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -60,7 +60,9 @@ if 'discovery_state' not in st.session_state:
         'df': None,
         'api_key': '',
         'use_llm': False,
-        'literature_agent': None
+        'literature_agent': None,
+        'custom_questions': [],
+        'use_custom_questions': False
     }
 
 # File paths
@@ -766,12 +768,20 @@ def run_discovery_cycle(cycle_num: int, objective: str, df: pd.DataFrame,
     # Step 1: Generate research questions
     context = wm.generate_context_summary() if cycle_num > 1 else ""
 
-    if use_llm and api_key:
+    # Check if using custom questions
+    if state.get('use_custom_questions') and state.get('custom_questions'):
+        # Use custom questions
+        questions = [
+            {"type": "analysis", "question": q}
+            for q in state['custom_questions']
+        ]
+        log_message(f"  📋 Using {len(questions)} custom research questions", "info")
+    elif use_llm and api_key:
         questions = generate_research_questions_llm(objective, context, cycle_num, api_key, model)
     else:
         questions = get_default_questions(cycle_num)
 
-    log_message(f"  📋 Generated {len(questions)} research questions", "info")
+    log_message(f"  📋 Analyzing {len(questions[:3])} questions in this cycle", "info")
 
     cycle_analyses = []
     cycle_literature = []
@@ -1157,9 +1167,8 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        st.title("🔬 Kosmos AI Scientist")
-        st.markdown("**ULTIMATE Edition**")
-        st.markdown("*Statistical Rigor + LLM Intelligence*")
+        st.title("🔬 AI Scientist")
+        st.markdown("*Statistical Analysis + LLM Intelligence*")
         st.divider()
 
         # API Configuration
@@ -1226,6 +1235,37 @@ def main():
             help="Generate detailed reports with extracted statistics"
         )
 
+        # Custom questions section
+        st.subheader("❓ Research Questions")
+
+        use_custom = st.checkbox(
+            "Use Custom Questions",
+            value=state.get('use_custom_questions', False),
+            help="Provide your own research questions instead of default ones"
+        )
+
+        state['use_custom_questions'] = use_custom
+
+        if use_custom:
+            st.markdown("**Enter your research questions (one per line):**")
+            custom_q_text = st.text_area(
+                "Questions",
+                value="\n".join(state.get('custom_questions', [])),
+                height=150,
+                label_visibility="collapsed",
+                help="List your research questions, one per line. These will be analyzed in order."
+            )
+
+            # Parse the custom questions
+            if custom_q_text:
+                custom_questions = [q.strip() for q in custom_q_text.split('\n') if q.strip()]
+                state['custom_questions'] = custom_questions
+                st.caption(f"📋 {len(custom_questions)} question(s) ready to analyze")
+            else:
+                state['custom_questions'] = []
+        else:
+            st.caption("Using default research questions")
+
         st.divider()
 
         # System Status
@@ -1272,8 +1312,8 @@ def main():
             st.text(f"Agents: {'✅' if HAS_AGENTS else '❌'}")
 
     # Main content
-    st.title("🔬 Kosmos AI Scientist - ULTIMATE Edition")
-    st.markdown("**Autonomous Data-Driven Discovery with Statistical Rigor**")
+    st.title("🔬 AI Scientist")
+    st.markdown("**Data-Driven Discovery with Statistical Analysis**")
 
     # Create tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -1285,7 +1325,7 @@ def main():
     ])
 
     with tab1:
-        st.header("Welcome to the Ultimate Discovery System")
+        st.header("Welcome to AI Scientist")
 
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -1295,8 +1335,8 @@ def main():
             st.metric("LLM Integration", "Optional")
             st.caption("Question generation & synthesis")
         with col3:
-            st.metric("Report Quality", "Publication-Ready")
-            st.caption("Full statistical evidence")
+            st.metric("Report Quality", "Comprehensive")
+            st.caption("Statistical evidence and analysis")
 
         st.markdown("---")
 
@@ -1315,14 +1355,14 @@ def main():
             - ✅ Power analysis
 
             **LLM Enhancement (Optional):**
-            - 🤖 Intelligent question generation
+            - 🤖 Question generation
             - 🤖 Discovery synthesis
             - 🤖 Literature search & summarization
             - 🤖 Hypothesis generation
             """)
 
         with col2:
-            st.subheader("🚀 How It Works")
+            st.subheader("How It Works")
             st.markdown("""
             **Each Discovery Cycle:**
 
@@ -1331,9 +1371,9 @@ def main():
                - Or uses curated research questions
 
             2️⃣ **Statistical Analysis**
-               - Real scipy/numpy computations
-               - Publication-quality statistics
-               - Automatic effect size calculations
+               - scipy/numpy computations
+               - Statistical testing and analysis
+               - Effect size calculations
 
             3️⃣ **Literature Review** (if LLM enabled)
                - Search knowledge base
@@ -1341,10 +1381,10 @@ def main():
 
             4️⃣ **Discovery Synthesis**
                - Combine statistical + literature evidence
-               - Generate actionable insights
+               - Generate insights
                - Propose new hypotheses
 
-            5️⃣ **World Model Update**
+            5️⃣ **Context Tracking**
                - Track all discoveries
                - Maintain context across cycles
                - Generate comprehensive reports
@@ -1365,16 +1405,16 @@ def main():
         6. **Review** discoveries and download the report
 
         **Note:** The system works in both modes:
-        - **With LLM:** Intelligent question generation + synthesis
-        - **Without LLM:** Curated questions + statistical discoveries
+        - **With LLM:** Question generation + synthesis
+        - **Without LLM:** Curated questions + statistical analysis
 
-        Both modes produce statistically rigorous results!
+        Both modes use rigorous statistical analysis!
         """)
 
         st.info(f"📁 **Working Directory:** `{BASE_DIR}`")
 
     with tab2:
-        st.header("Run Autonomous Discovery")
+        st.header("Run Discovery")
 
         # Control buttons
         col1, col2, col3 = st.columns(3)
@@ -1417,7 +1457,9 @@ def main():
                     'df': None,
                     'api_key': state.get('api_key', ''),
                     'use_llm': state.get('use_llm', False),
-                    'literature_agent': None
+                    'literature_agent': None,
+                    'custom_questions': state.get('custom_questions', []),
+                    'use_custom_questions': state.get('use_custom_questions', False)
                 }
                 log_message("🔄 System reset", "info")
                 st.rerun()

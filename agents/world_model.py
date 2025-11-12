@@ -9,7 +9,7 @@ from typing import List, Dict, Any
 class WorldModel:
     """
     Structured world model to track discoveries, analyses, and literature findings
-    Similar to Kosmos paper's approach to context management
+    Maintains context and state across research cycles
     """
     
     def __init__(self, output_dir='outputs'):
@@ -146,7 +146,7 @@ DISCOVERIES ({len(self.discoveries)}):
     def generate_report(self) -> str:
         """Generate final discovery report"""
         report = f"""
-KOSMOS DISCOVERY REPORT
+DISCOVERY REPORT
 {'=' * 80}
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Total Cycles: {self.current_cycle}
