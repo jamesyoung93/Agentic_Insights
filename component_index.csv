@@ -1,8 +1,9 @@
-Component,Path,Type,Key Functions,Inputs,Outputs
-Streamlit UI,streamlit_app_ULTIMATE.py,Web Interface,"main(), run_discovery_cycle(), perform_statistical_analysis()","User inputs, CSV data","Interactive visualizations, reports"
-Kosmos Orchestrator,main.py,Controller,"KosmosFramework.run(), _generate_research_questions()",Research objectives,Coordinated agent tasks
-Data Analysis Agent,agents/data_analyst.py,Agent,"analyze(), _generate_code(), _execute_code()","Research questions, CSV data","Statistical results, Python code"
-Literature Agent,agents/literature_searcher.py,Agent,"search(), synthesize()",Search queries,"Paper summaries, insights"
-World Model,agents/world_model.py,State Manager,"add_discovery(), add_analysis(), get_context_summary()","Discoveries, analyses","State JSON, reports"
-Statistical Engine,streamlit_app_ULTIMATE.py (embedded),Compute,"perform_statistical_analysis(), scipy.stats functions","DataFrames, hypotheses","p-values, effect sizes, correlations"
-Config,config.py,Configuration,"API keys, settings",None,Configuration values
+component,path,key_functions,inputs,outputs,critical_deps
+streamlit_app_ULTIMATE.py,/home/user/Agentic_Insights/streamlit_app_ULTIMATE.py,"load_data, perform_statistical_analysis, run_discovery_cycle","data/customers.csv, data/competitor_data.csv, config.py","world_model.json, auto_enhanced_report.txt, session_state","streamlit, pandas, scipy, openai"
+world_model_builder.py,/home/user/Agentic_Insights/world_model_builder.py,"add_discovery, add_trajectory, save, load",cycle_data (from streamlit),world_model.json,"json, dataclasses"
+auto_enhanced_report.py,/home/user/Agentic_Insights/auto_enhanced_report.py,"extract_statistics_from_trajectory, generate_enhanced_report","discoveries, trajectories, world_model",auto_enhanced_report.txt,json
+agents/data_analyst.py,/home/user/Agentic_Insights/agents/data_analyst.py,"analyze, _generate_code, _execute_code","research_question, context, CSV files","outputs/analyses/*.py, analysis_results",openai
+agents/literature_searcher.py,/home/user/Agentic_Insights/agents/literature_searcher.py,"search, _find_relevant_papers, _extract_insights","query, knowledge/literature_index.json",literature_findings,openai
+config.py,/home/user/Agentic_Insights/config.py,N/A (configuration),None,"OPENAI_API_KEY, MODEL_NAME, settings",None
+data/customers.csv,/home/user/Agentic_Insights/data/customers.csv,N/A (data source),None,"Customer demographics, transactions",pandas
+data/competitor_data.csv,/home/user/Agentic_Insights/data/competitor_data.csv,N/A (data source),None,Competitor interaction data,pandas

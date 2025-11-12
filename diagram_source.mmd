@@ -1,69 +1,50 @@
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#f0f0f0','primaryTextColor':'#000','primaryBorderColor':'#333','lineColor':'#333','fontSize':'16px'}}}%%
 graph LR
-    %% Node Definitions
-    %% Sources Swimlane
-    csv_data[(CSV Data)]
-    literature_store[(Literature Store)]
-    config[/Config/]
+    %% Agentic Insights Architecture
 
-    %% Processing Swimlane
-    streamlit_ui[Streamlit UI]
-    kosmos_framework[Kosmos Framework]
+    subgraph Sources
+        CSV[("Customer<br/>Data CSV")]
+        LIT[("Literature<br/>Index")]
+        API{{OpenAI<br/>API}}
+    end
 
-    %% Agent Layer Swimlane
-    data_analyst[Data Analyst Agent]
-    lit_search_agent[Literature Agent]
-    world_model[World Model]
+    subgraph Processing
+        UI[Streamlit<br/>UI]
+        DA[Data<br/>Analyst]
+        LS[Literature<br/>Searcher]
+        STATS[Statistical<br/>Analysis]
+    end
 
-    %% External Swimlane
-    openai_api{{OpenAI API}}
+    subgraph Storage
+        WM[World<br/>Model]
+        STATE[("Session<br/>State")]
+    end
 
-    %% Storage Swimlane
-    world_model_state[(World Model JSON)]
+    subgraph Outputs
+        RPT[/Enhanced<br/>Report/]
+        CODE[/Generated<br/>Code/]
+        DASH[/Interactive<br/>Dashboard/]
+    end
 
-    %% Outputs Swimlane
-    enhanced_report[/Enhanced Report/]
-    analysis_artifacts[/Analysis Code/]
+    %% Data flows
+    CSV -->|pandas.read_csv| UI
+    LIT -->|JSON load| LS
+    UI -->|Run analysis| DA
+    UI -.->|Search query| LS
+    DA -.->|Generate code| API
+    LS -.->|Extract insights| API
+    UI -.->|Synthesize| API
+    DA -->|scipy/numpy| STATS
+    STATS -->|Add trajectory| WM
+    WM -->|Persist JSON| STATE
+    WM -->|Generate report| RPT
+    DA -->|Save .py files| CODE
+    STATE -->|Render state| DASH
+    WM -->|Show discoveries| DASH
 
-    %% Edge Definitions (15 edges total)
-    %% Sources → Processing
-    csv_data -->|"Load CSV (pandas)<br/>thick"| streamlit_ui
-    config -.->|"Load settings<br/>thin"| streamlit_ui
-
-    %% Sources → Agents
-    literature_store -->|"Read papers (JSON+txt)<br/>medium"| lit_search_agent
-
-    %% Processing → Agents
-    streamlit_ui -->|"Research question<br/>thick"| data_analyst
-    streamlit_ui -.->|"Literature query<br/>medium"| lit_search_agent
-    streamlit_ui -->|"Update discoveries<br/>thick"| world_model
-
-    %% CLI Alternative (dashed)
-    kosmos_framework -.->|"CLI orchestration<br/>medium"| data_analyst
-    kosmos_framework -.->|"CLI orchestration<br/>medium"| world_model
-
-    %% Agents → External
-    data_analyst -->|"Generate code (REST JSON)<br/>thick"| openai_api
-    lit_search_agent -->|"Synthesize (REST JSON)<br/>medium"| openai_api
-
-    %% Agents → World Model
-    data_analyst -->|"Store trajectory<br/>thick"| world_model
-    lit_search_agent -->|"Store findings<br/>medium"| world_model
-
-    %% World Model → Storage
-    world_model -->|"Save JSON<br/>medium"| world_model_state
-
-    %% World Model → Outputs
-    world_model -->|"Generate report<br/>medium"| enhanced_report
-    data_analyst -->|"Save code/results<br/>medium"| analysis_artifacts
-
-    %% Styling
-    classDef datastoreStyle fill:#d0e0f0,stroke:#1e5a8e,stroke-width:3px
-    classDef serviceStyle fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
-    classDef externalStyle fill:#fff3e0,stroke:#e65100,stroke-width:3px
-    classDef outputStyle fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
-
-    class csv_data,literature_store,world_model_state datastoreStyle
-    class streamlit_ui,kosmos_framework,data_analyst,lit_search_agent,world_model serviceStyle
-    class openai_api externalStyle
-    class config,enhanced_report,analysis_artifacts outputStyle
+    style CSV fill:#fff
+    style LIT fill:#fff
+    style API fill:#ffface
+    style STATE fill:#fff
+    style RPT fill:#e6f0ff
+    style CODE fill:#e6f0ff
+    style DASH fill:#e6f0ff
