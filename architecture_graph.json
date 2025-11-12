@@ -2,166 +2,201 @@
   "nodes": [
     {
       "id": "csv_data",
-      "label": "CSV Data\n(customers,\ncompetitors)",
+      "label": "Customer\nData CSV",
       "type": "datastore",
-      "x": 0.8,
-      "y": 2.5
+      "swimlane": 1,
+      "verified": true
     },
     {
-      "id": "openai",
-      "label": "OpenAI API\n(GPT-3.5/4)",
+      "id": "literature",
+      "label": "Literature\nIndex",
+      "type": "datastore",
+      "swimlane": 1,
+      "verified": true
+    },
+    {
+      "id": "openai_api",
+      "label": "OpenAI\nAPI",
       "type": "external",
-      "x": 0.8,
-      "y": 5.0
+      "swimlane": 1,
+      "verified": true
     },
     {
-      "id": "streamlit",
-      "label": "Streamlit UI",
-      "type": "service",
-      "x": 3.0,
-      "y": 1.2
+      "id": "streamlit_ui",
+      "label": "Streamlit\nUI",
+      "type": "module",
+      "swimlane": 2,
+      "verified": true
     },
     {
-      "id": "main_orch",
-      "label": "Kosmos\nOrchestrator",
-      "type": "service",
-      "x": 3.0,
-      "y": 3.0
+      "id": "data_analyst",
+      "label": "Data\nAnalyst",
+      "type": "module",
+      "swimlane": 2,
+      "verified": true
     },
     {
-      "id": "data_agent",
-      "label": "Data Analysis\nAgent",
-      "type": "service",
-      "x": 5.2,
-      "y": 2.2
-    },
-    {
-      "id": "lit_agent",
-      "label": "Literature\nAgent",
-      "type": "service",
-      "x": 5.2,
-      "y": 3.8
+      "id": "lit_searcher",
+      "label": "Literature\nSearcher",
+      "type": "module",
+      "swimlane": 2,
+      "verified": true
     },
     {
       "id": "stats_engine",
-      "label": "Statistical\nEngine (scipy)",
-      "type": "service",
-      "x": 7.4,
-      "y": 2.2
+      "label": "Statistical\nAnalysis",
+      "type": "module",
+      "swimlane": 2,
+      "verified": true
     },
     {
       "id": "world_model",
-      "label": "World Model\n(State Mgmt)",
-      "type": "service",
-      "x": 7.4,
-      "y": 4.2
+      "label": "World\nModel",
+      "type": "module",
+      "swimlane": 3,
+      "verified": true
     },
     {
-      "id": "file_storage",
-      "label": "Local Storage\n(JSON/CSV)",
+      "id": "session_state",
+      "label": "Session\nState",
       "type": "datastore",
-      "x": 9.6,
-      "y": 3.0
+      "swimlane": 3,
+      "verified": true
     },
     {
-      "id": "analyses_out",
-      "label": "Analysis\nOutputs (.py)",
+      "id": "enhanced_report",
+      "label": "Enhanced\nReport",
       "type": "output",
-      "x": 9.6,
-      "y": 5.2
+      "swimlane": 4,
+      "verified": true
     },
     {
-      "id": "reports_out",
-      "label": "Reports\n(.txt, .pptx)",
+      "id": "analysis_code",
+      "label": "Generated\nCode",
       "type": "output",
-      "x": 11.5,
-      "y": 4.0
+      "swimlane": 4,
+      "verified": true
+    },
+    {
+      "id": "interactive_ui",
+      "label": "Interactive\nDashboard",
+      "type": "output",
+      "swimlane": 4,
+      "verified": true
     }
   ],
   "edges": [
     {
       "from": "csv_data",
-      "to": "data_agent",
-      "label": "Batch CSV",
+      "to": "streamlit_ui",
+      "label": "pandas.read_csv",
       "style": "solid",
-      "weight": "medium"
+      "weight": "thick",
+      "verified": true
     },
     {
-      "from": "streamlit",
-      "to": "main_orch",
-      "label": "User requests",
+      "from": "literature",
+      "to": "lit_searcher",
+      "label": "JSON load",
       "style": "solid",
-      "weight": "thin"
+      "weight": "medium",
+      "verified": true
     },
     {
-      "from": "main_orch",
-      "to": "data_agent",
-      "label": "Questions",
+      "from": "streamlit_ui",
+      "to": "data_analyst",
+      "label": "Run analysis",
       "style": "solid",
-      "weight": "medium"
+      "weight": "thick",
+      "verified": true
     },
     {
-      "from": "main_orch",
-      "to": "lit_agent",
-      "label": "Queries",
-      "style": "solid",
-      "weight": "thin"
+      "from": "streamlit_ui",
+      "to": "lit_searcher",
+      "label": "Search query",
+      "style": "dotted",
+      "weight": "thin",
+      "verified": false
     },
     {
-      "from": "data_agent",
-      "to": "openai",
-      "label": "Code gen",
-      "style": "solid",
-      "weight": "medium"
+      "from": "data_analyst",
+      "to": "openai_api",
+      "label": "Generate code",
+      "style": "dotted",
+      "weight": "medium",
+      "verified": false
     },
     {
-      "from": "lit_agent",
-      "to": "openai",
-      "label": "Search",
-      "style": "solid",
-      "weight": "thin"
+      "from": "lit_searcher",
+      "to": "openai_api",
+      "label": "Extract insights",
+      "style": "dotted",
+      "weight": "medium",
+      "verified": false
     },
     {
-      "from": "data_agent",
+      "from": "streamlit_ui",
+      "to": "openai_api",
+      "label": "Synthesize",
+      "style": "dotted",
+      "weight": "thin",
+      "verified": false
+    },
+    {
+      "from": "data_analyst",
       "to": "stats_engine",
-      "label": "Stats tests",
+      "label": "scipy/numpy",
       "style": "solid",
-      "weight": "thick"
+      "weight": "thick",
+      "verified": true
     },
     {
       "from": "stats_engine",
       "to": "world_model",
-      "label": "Results JSON",
+      "label": "Add trajectory",
       "style": "solid",
-      "weight": "medium"
-    },
-    {
-      "from": "lit_agent",
-      "to": "world_model",
-      "label": "Findings",
-      "style": "solid",
-      "weight": "thin"
+      "weight": "thick",
+      "verified": true
     },
     {
       "from": "world_model",
-      "to": "file_storage",
-      "label": "State save",
+      "to": "session_state",
+      "label": "Persist JSON",
       "style": "solid",
-      "weight": "medium"
-    },
-    {
-      "from": "data_agent",
-      "to": "analyses_out",
-      "label": "Code artifacts",
-      "style": "solid",
-      "weight": "thin"
+      "weight": "medium",
+      "verified": true
     },
     {
       "from": "world_model",
-      "to": "reports_out",
-      "label": "Final reports",
+      "to": "enhanced_report",
+      "label": "Generate report",
       "style": "solid",
-      "weight": "medium"
+      "weight": "medium",
+      "verified": true
+    },
+    {
+      "from": "data_analyst",
+      "to": "analysis_code",
+      "label": "Save .py files",
+      "style": "solid",
+      "weight": "medium",
+      "verified": true
+    },
+    {
+      "from": "session_state",
+      "to": "interactive_ui",
+      "label": "Render state",
+      "style": "solid",
+      "weight": "thick",
+      "verified": true
+    },
+    {
+      "from": "world_model",
+      "to": "interactive_ui",
+      "label": "Show discoveries",
+      "style": "solid",
+      "weight": "medium",
+      "verified": true
     }
   ]
 }
