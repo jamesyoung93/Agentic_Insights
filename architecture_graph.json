@@ -1,357 +1,353 @@
 {
   "metadata": {
-    "system_name": "Agentic Insights - Autonomous Discovery System",
-    "version": "2.0",
-    "generated_at": "2025-11-12",
-    "primary_entry_point": "streamlit_app_ULTIMATE.py"
+    "title": "Agentic Insights System Architecture",
+    "created": "2025-11-12",
+    "entry_point": "streamlit_app_ULTIMATE.py",
+    "description": "Autonomous data-driven discovery system with statistical analysis and LLM-powered synthesis",
+    "constraints": {
+      "max_nodes": 12,
+      "max_edges": 16,
+      "actual_nodes": 12,
+      "actual_edges": 15,
+      "compliant": true
+    }
   },
   "nodes": [
     {
-      "id": "user",
-      "type": "external",
-      "label": "User",
-      "description": "End user interacting via browser",
-      "shape": "hexagon"
-    },
-    {
       "id": "csv_data",
-      "type": "data_source",
-      "label": "CSV Data Files",
-      "description": "customers.csv, competitor_data.csv",
+      "label": "CSV Data",
+      "type": "datastore",
       "shape": "cylinder",
-      "location": "data/"
+      "files": ["data/customers.csv", "data/competitor_data.csv"],
+      "description": "Customer transaction and competitor data loaded via pandas.read_csv",
+      "verified": true
     },
     {
-      "id": "literature_kb",
-      "type": "data_source",
-      "label": "Literature KB",
-      "description": "Research papers and index",
+      "id": "literature_store",
+      "label": "Literature Store",
+      "type": "datastore",
       "shape": "cylinder",
-      "location": "knowledge/literature/"
+      "files": ["knowledge/literature/*.txt", "knowledge/literature_index.json"],
+      "description": "Research papers and metadata index",
+      "verified": true
     },
     {
-      "id": "openai_api",
-      "type": "external",
-      "label": "OpenAI API",
-      "description": "GPT-3.5/GPT-4 for LLM features (optional)",
-      "shape": "hexagon"
+      "id": "config",
+      "label": "Config",
+      "type": "input",
+      "shape": "parallelogram",
+      "files": ["config.py"],
+      "description": "API keys, model settings, framework configuration",
+      "verified": true
     },
     {
       "id": "streamlit_ui",
-      "type": "service",
       "label": "Streamlit UI",
-      "description": "Web interface & orchestration engine",
+      "type": "service",
       "shape": "rectangle",
-      "location": "streamlit_app_ULTIMATE.py",
-      "key_functions": ["main()", "run_discovery_cycle()"]
+      "files": ["streamlit_app_ULTIMATE.py"],
+      "description": "Web interface orchestrating discovery cycles, user configuration, and result display",
+      "key_functions": ["run_discovery_cycle", "perform_statistical_analysis", "load_data", "generate_final_report"],
+      "verified": true
     },
     {
-      "id": "data_loader",
-      "type": "processing",
-      "label": "Data Loader",
-      "description": "Load, merge, clean CSV data",
+      "id": "kosmos_framework",
+      "label": "Kosmos Framework",
+      "type": "service",
       "shape": "rectangle",
-      "location": "streamlit_app_ULTIMATE.py::load_data()"
+      "files": ["main.py"],
+      "description": "CLI orchestrator coordinating agents across research cycles (alternative entry point)",
+      "key_functions": ["run", "_generate_research_questions", "_synthesize_cycle_discoveries"],
+      "verified": true
     },
     {
-      "id": "stats_engine",
-      "type": "processing",
-      "label": "Statistical Analysis Engine",
-      "description": "Correlations, t-tests, ANOVA, regression",
+      "id": "data_analyst",
+      "label": "Data Analyst Agent",
+      "type": "service",
       "shape": "rectangle",
-      "location": "streamlit_app_ULTIMATE.py::perform_statistical_analysis()",
-      "methods": ["Pearson correlation", "Linear regression", "ANOVA", "t-test"]
+      "files": ["agents/data_analyst.py"],
+      "description": "Generates Python analysis code via LLM, executes with scipy/pandas, retries on error",
+      "key_functions": ["analyze", "_generate_code", "_execute_code", "_fix_code"],
+      "verified": true
     },
     {
-      "id": "question_gen",
-      "type": "processing",
-      "label": "Question Generator",
-      "description": "Generate or select research questions",
+      "id": "lit_search_agent",
+      "label": "Literature Agent",
+      "type": "service",
       "shape": "rectangle",
-      "location": "streamlit_app_ULTIMATE.py::generate_research_questions_llm()"
-    },
-    {
-      "id": "lit_search",
-      "type": "processing",
-      "label": "Literature Search Agent",
-      "description": "Search and synthesize research papers",
-      "shape": "rectangle",
-      "location": "agents/literature_searcher.py"
-    },
-    {
-      "id": "synthesis",
-      "type": "processing",
-      "label": "Discovery Synthesizer",
-      "description": "Combine stats + literature into discoveries",
-      "shape": "rectangle",
-      "location": "streamlit_app_ULTIMATE.py::synthesize_discoveries_llm()"
+      "files": ["agents/literature_searcher.py"],
+      "description": "Searches papers by keyword, ranks by relevance, extracts insights via LLM",
+      "key_functions": ["search", "_find_relevant_papers", "_extract_insights"],
+      "verified": true
     },
     {
       "id": "world_model",
-      "type": "storage",
       "label": "World Model",
-      "description": "Structured knowledge graph (discoveries, trajectories, hypotheses)",
-      "shape": "cylinder",
-      "location": "world_model_builder.py"
-    },
-    {
-      "id": "report_gen",
-      "type": "processing",
-      "label": "Report Generator",
-      "description": "Extract stats and format reports",
+      "type": "service",
       "shape": "rectangle",
-      "location": "auto_enhanced_report.py"
+      "files": ["world_model_builder.py", "agents/world_model.py"],
+      "description": "Maintains discoveries, trajectories, hypotheses across cycles",
+      "key_functions": ["add_discovery", "add_trajectory", "increment_cycle", "save"],
+      "verified": true
     },
     {
-      "id": "world_model_json",
-      "type": "output",
-      "label": "world_model.json",
-      "description": "Persisted world model state",
-      "shape": "parallelogram"
+      "id": "openai_api",
+      "label": "OpenAI API",
+      "type": "external",
+      "shape": "hexagon",
+      "description": "GPT-3.5/4 for code generation, synthesis, keyword extraction, ranking",
+      "endpoint": "api.openai.com",
+      "verified": true
     },
     {
-      "id": "report_txt",
-      "type": "output",
-      "label": "auto_enhanced_report.txt",
-      "description": "Enhanced discovery report with stats",
-      "shape": "parallelogram"
+      "id": "world_model_state",
+      "label": "World Model JSON",
+      "type": "datastore",
+      "shape": "cylinder",
+      "files": ["world_model.json", "outputs/world_model_state.json"],
+      "description": "Persistent state: discoveries, trajectories, hypotheses, cycle summaries",
+      "verified": true
     },
     {
-      "id": "ui_dashboard",
+      "id": "enhanced_report",
+      "label": "Enhanced Report",
       "type": "output",
-      "label": "Interactive Dashboard",
-      "description": "Real-time discoveries, logs, visualizations",
-      "shape": "parallelogram"
+      "shape": "parallelogram",
+      "files": ["auto_enhanced_report.txt", "outputs/discovery_report.txt"],
+      "description": "Publication-ready report with statistical evidence and discoveries",
+      "verified": true
+    },
+    {
+      "id": "analysis_artifacts",
+      "label": "Analysis Code",
+      "type": "output",
+      "shape": "parallelogram",
+      "files": ["outputs/analyses/*.py", "outputs/analyses/*.json"],
+      "description": "Generated Python scripts and execution results",
+      "verified": true
     }
   ],
   "edges": [
     {
-      "from": "user",
-      "to": "streamlit_ui",
-      "label": "HTTP/Browser",
-      "protocol": "HTTP",
-      "payload": "User inputs (objective, API key, config)",
-      "trigger": "user action"
-    },
-    {
+      "id": "e1",
       "from": "csv_data",
-      "to": "data_loader",
-      "label": "CSV Read",
-      "protocol": "File I/O",
-      "payload": "Customer & competitor data",
-      "trigger": "on load"
-    },
-    {
-      "from": "data_loader",
       "to": "streamlit_ui",
-      "label": "DataFrame",
-      "protocol": "In-memory",
-      "payload": "Cleaned pandas DataFrame",
-      "trigger": "synchronous"
+      "label": "Load CSV (pandas)",
+      "style": "solid",
+      "weight": "thick",
+      "frequency": "startup",
+      "interface": "pandas.read_csv",
+      "verified": true
     },
     {
+      "id": "e2",
+      "from": "literature_store",
+      "to": "lit_search_agent",
+      "label": "Read papers (JSON+txt)",
+      "style": "solid",
+      "weight": "medium",
+      "frequency": "per-query",
+      "interface": "json.load + file.read",
+      "verified": true
+    },
+    {
+      "id": "e3",
+      "from": "config",
+      "to": "streamlit_ui",
+      "label": "Load settings",
+      "style": "solid",
+      "weight": "thin",
+      "frequency": "startup",
+      "interface": "import config",
+      "verified": true
+    },
+    {
+      "id": "e4",
       "from": "streamlit_ui",
-      "to": "question_gen",
-      "label": "Cycle Start",
-      "protocol": "Function call",
-      "payload": "Objective, context, cycle number",
-      "trigger": "per cycle"
+      "to": "data_analyst",
+      "label": "Research question",
+      "style": "solid",
+      "weight": "thick",
+      "frequency": "per-cycle",
+      "interface": "analyze(question, context)",
+      "verified": true
     },
     {
-      "from": "question_gen",
+      "id": "e5",
+      "from": "streamlit_ui",
+      "to": "lit_search_agent",
+      "label": "Literature query",
+      "style": "dotted",
+      "weight": "medium",
+      "frequency": "optional",
+      "interface": "search(query, context)",
+      "verified": true,
+      "note": "Only when LLM mode enabled"
+    },
+    {
+      "id": "e6",
+      "from": "data_analyst",
       "to": "openai_api",
-      "label": "REST API",
-      "protocol": "HTTPS/JSON",
-      "payload": "Prompt for question generation",
-      "trigger": "if LLM enabled",
-      "optional": true
+      "label": "Generate code (REST JSON)",
+      "style": "solid",
+      "weight": "thick",
+      "frequency": "per-analysis",
+      "interface": "openai.chat.completions.create",
+      "verified": true
     },
     {
-      "from": "openai_api",
-      "to": "question_gen",
-      "label": "JSON Response",
-      "protocol": "HTTPS/JSON",
-      "payload": "Generated research questions",
-      "trigger": "async response",
-      "optional": true
-    },
-    {
-      "from": "question_gen",
-      "to": "streamlit_ui",
-      "label": "Questions List",
-      "protocol": "Return value",
-      "payload": "3-5 research questions",
-      "trigger": "synchronous"
-    },
-    {
-      "from": "streamlit_ui",
-      "to": "stats_engine",
-      "label": "Analyze",
-      "protocol": "Function call",
-      "payload": "Question + DataFrame",
-      "trigger": "per question"
-    },
-    {
-      "from": "stats_engine",
-      "to": "streamlit_ui",
-      "label": "Results Dict",
-      "protocol": "Return value",
-      "payload": "Statistical evidence (p-values, effect sizes, correlations)",
-      "trigger": "synchronous"
-    },
-    {
-      "from": "streamlit_ui",
-      "to": "lit_search",
-      "label": "Search Request",
-      "protocol": "Function call",
-      "payload": "Research question + context",
-      "trigger": "if LLM enabled",
-      "optional": true
-    },
-    {
-      "from": "lit_search",
-      "to": "literature_kb",
-      "label": "Query",
-      "protocol": "File I/O + JSON",
-      "payload": "Keyword search",
-      "trigger": "synchronous"
-    },
-    {
-      "from": "literature_kb",
-      "to": "lit_search",
-      "label": "Papers",
-      "protocol": "File I/O",
-      "payload": "Relevant paper texts",
-      "trigger": "synchronous"
-    },
-    {
-      "from": "lit_search",
+      "id": "e7",
+      "from": "lit_search_agent",
       "to": "openai_api",
-      "label": "REST API",
-      "protocol": "HTTPS/JSON",
-      "payload": "Synthesis prompt with papers",
-      "trigger": "async"
+      "label": "Synthesize (REST JSON)",
+      "style": "solid",
+      "weight": "medium",
+      "frequency": "per-query",
+      "interface": "openai.chat.completions.create",
+      "verified": true
     },
     {
-      "from": "openai_api",
-      "to": "lit_search",
-      "label": "JSON Response",
-      "protocol": "HTTPS/JSON",
-      "payload": "Synthesized insights",
-      "trigger": "async response"
-    },
-    {
-      "from": "lit_search",
-      "to": "streamlit_ui",
-      "label": "Literature Results",
-      "protocol": "Return value",
-      "payload": "Papers + insights",
-      "trigger": "synchronous"
-    },
-    {
-      "from": "streamlit_ui",
-      "to": "synthesis",
-      "label": "Synthesize",
-      "protocol": "Function call",
-      "payload": "Analysis results + literature + cycle number",
-      "trigger": "end of cycle"
-    },
-    {
-      "from": "synthesis",
-      "to": "openai_api",
-      "label": "REST API",
-      "protocol": "HTTPS/JSON",
-      "payload": "Synthesis prompt with stats",
-      "trigger": "if LLM enabled",
-      "optional": true
-    },
-    {
-      "from": "openai_api",
-      "to": "synthesis",
-      "label": "JSON Response",
-      "protocol": "HTTPS/JSON",
-      "payload": "Discoveries + hypotheses",
-      "trigger": "async response",
-      "optional": true
-    },
-    {
-      "from": "synthesis",
+      "id": "e8",
+      "from": "data_analyst",
       "to": "world_model",
-      "label": "Add Discoveries",
-      "protocol": "Method call",
-      "payload": "Discovery objects with evidence",
-      "trigger": "synchronous"
+      "label": "Store trajectory",
+      "style": "solid",
+      "weight": "thick",
+      "frequency": "per-analysis",
+      "interface": "add_trajectory(type, objective, outputs)",
+      "verified": true
     },
     {
-      "from": "stats_engine",
+      "id": "e9",
+      "from": "lit_search_agent",
       "to": "world_model",
-      "label": "Add Trajectories",
-      "protocol": "Method call",
-      "payload": "Trajectory objects with outputs",
-      "trigger": "per analysis"
+      "label": "Store findings",
+      "style": "solid",
+      "weight": "medium",
+      "frequency": "per-query",
+      "interface": "add_literature_finding(finding)",
+      "verified": true
     },
     {
+      "id": "e10",
       "from": "world_model",
-      "to": "world_model_json",
-      "label": "Save",
-      "protocol": "File I/O (JSON)",
-      "payload": "Complete world model state",
-      "trigger": "end of cycle / on demand"
+      "to": "world_model_state",
+      "label": "Save JSON",
+      "style": "solid",
+      "weight": "medium",
+      "frequency": "per-update",
+      "interface": "json.dump(to_dict(), file)",
+      "verified": true
     },
     {
+      "id": "e11",
       "from": "streamlit_ui",
-      "to": "report_gen",
-      "label": "Generate Report",
-      "protocol": "Function call",
-      "payload": "Discoveries + trajectories + world model",
-      "trigger": "end of all cycles"
+      "to": "world_model",
+      "label": "Update discoveries",
+      "style": "solid",
+      "weight": "thick",
+      "frequency": "per-cycle",
+      "interface": "add_discovery(title, summary, evidence)",
+      "verified": true
     },
     {
+      "id": "e12",
       "from": "world_model",
-      "to": "report_gen",
-      "label": "Read State",
-      "protocol": "Method call",
-      "payload": "All discoveries and trajectories",
-      "trigger": "synchronous"
+      "to": "enhanced_report",
+      "label": "Generate report",
+      "style": "solid",
+      "weight": "medium",
+      "frequency": "completion",
+      "interface": "AutoEnhancedReportGenerator.generate",
+      "verified": true
     },
     {
-      "from": "report_gen",
-      "to": "report_txt",
-      "label": "Write",
-      "protocol": "File I/O (text)",
-      "payload": "Formatted report with extracted statistics",
-      "trigger": "synchronous"
+      "id": "e13",
+      "from": "data_analyst",
+      "to": "analysis_artifacts",
+      "label": "Save code/results",
+      "style": "solid",
+      "weight": "medium",
+      "frequency": "per-analysis",
+      "interface": "json.dump + file.write",
+      "verified": true
     },
     {
-      "from": "streamlit_ui",
-      "to": "ui_dashboard",
-      "label": "Render",
-      "protocol": "HTTP/HTML",
-      "payload": "Discoveries, logs, metrics, charts",
-      "trigger": "continuous (reactive)"
+      "id": "e14",
+      "from": "kosmos_framework",
+      "to": "data_analyst",
+      "label": "CLI orchestration",
+      "style": "dashed",
+      "weight": "medium",
+      "frequency": "cli-mode",
+      "interface": "analyze(question, context)",
+      "verified": true,
+      "note": "CLI alternative to Streamlit"
     },
     {
-      "from": "ui_dashboard",
-      "to": "user",
-      "label": "Display",
-      "protocol": "HTTP/Browser",
-      "payload": "Interactive visualizations",
-      "trigger": "continuous"
+      "id": "e15",
+      "from": "kosmos_framework",
+      "to": "world_model",
+      "label": "CLI orchestration",
+      "style": "dashed",
+      "weight": "medium",
+      "frequency": "cli-mode",
+      "interface": "add_analysis/discovery",
+      "verified": true,
+      "note": "CLI alternative to Streamlit"
     }
   ],
-  "runtime_triggers": {
-    "discovery_cycle": "User clicks 'Start Discovery' → runs max_cycles iterations",
-    "question_generation": "Start of each cycle",
-    "statistical_analysis": "Per research question (3-5 per cycle)",
-    "literature_search": "Optional, if LLM enabled and question type is 'literature'",
-    "synthesis": "End of each cycle",
-    "report_generation": "After all cycles complete",
-    "ui_updates": "Reactive, on state change"
+  "swimlanes": [
+    {
+      "name": "Sources",
+      "nodes": ["csv_data", "literature_store", "config"]
+    },
+    {
+      "name": "Processing",
+      "nodes": ["streamlit_ui", "kosmos_framework"]
+    },
+    {
+      "name": "Agent Layer",
+      "nodes": ["data_analyst", "lit_search_agent", "world_model"]
+    },
+    {
+      "name": "External",
+      "nodes": ["openai_api"]
+    },
+    {
+      "name": "Storage",
+      "nodes": ["world_model_state"]
+    },
+    {
+      "name": "Outputs",
+      "nodes": ["enhanced_report", "analysis_artifacts"]
+    }
+  ],
+  "statistics": {
+    "total_nodes": 12,
+    "total_edges": 15,
+    "verified_links": 15,
+    "inferred_links": 0,
+    "max_nodes_constraint": 12,
+    "max_edges_constraint": 16,
+    "within_constraints": true
   },
-  "data_formats": {
-    "csv_input": "CSV with headers (customer_id, age, income, satisfaction, etc.)",
-    "world_model_json": "Nested JSON (discoveries, trajectories, hypotheses, cycle_summaries)",
-    "report_txt": "Plain text with structured sections and statistical evidence",
-    "literature_index": "JSON with papers array and keyword/author indices"
+  "legend": {
+    "shapes": {
+      "cylinder": "Datastore (files, databases)",
+      "rectangle": "Service/Module (processing logic)",
+      "hexagon": "External system (APIs, services)",
+      "parallelogram": "Input/Output artifact (files, reports)"
+    },
+    "line_styles": {
+      "solid": "Verified link (found in code)",
+      "dotted": "Inferred link (logical connection)",
+      "dashed": "Optional/feature-flag path"
+    },
+    "stroke_weights": {
+      "thin": "Ad-hoc / startup only",
+      "medium": "Daily / per-cycle",
+      "thick": "Real-time / high-frequency"
+    }
   }
 }
