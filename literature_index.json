@@ -1,0 +1,368 @@
+{
+  "papers": [
+    {
+      "id": "paper_001",
+      "title": "Customer Loyalty Dynamics in Quick-Service Retail: A Time Series Analysis",
+      "authors": [
+        "Smith, J.",
+        "Johnson, K.",
+        "Williams, R."
+      ],
+      "year": 2023,
+      "journal": "Journal of Retail Analytics",
+      "abstract": "This study examines customer loyalty patterns in quick-service retail environments. Using 18 months of transaction data from 3,200 customers, we find that loyalty program members visit 2.3x more frequently and have 34% higher lifetime value. Mobile app usage correlates strongly with retention (r=0.67, p<0.001).",
+      "key_findings": [
+        "Loyalty members visit 2.3x more frequently than non-members",
+        "Mobile app usage increases retention by 34%",
+        "Morning customers have 12% higher satisfaction scores",
+        "Wait times above 7 minutes correlate with 22% drop in return visits"
+      ],
+      "methods": "Longitudinal analysis, regression modeling, customer segmentation",
+      "keywords": [
+        "customer loyalty",
+        "retention",
+        "mobile apps",
+        "quick service"
+      ]
+    },
+    {
+      "id": "paper_002",
+      "title": "Seasonal Demand Patterns and Revenue Optimization in Coffee Retail",
+      "authors": [
+        "Chen, L.",
+        "Rodriguez, M.",
+        "Park, S."
+      ],
+      "year": 2024,
+      "journal": "International Journal of Hospitality Management",
+      "abstract": "We analyze seasonal demand patterns across 250 coffee shop locations over 3 years. Winter months (Oct-Feb) show 18-25% higher transaction volumes. Temperature drops of 10\u00b0F correlate with 8% increase in hot beverage sales. Regional variations significant (p<0.05).",
+      "key_findings": [
+        "18-25% higher sales volume in winter months",
+        "Temperature inversely correlated with hot beverage sales (r=-0.73)",
+        "Weekend traffic patterns differ by 35% from weekdays",
+        "Regional preferences vary significantly (ANOVA F=12.4, p<0.001)"
+      ],
+      "methods": "Time series decomposition, ARIMA modeling, geographic analysis",
+      "keywords": [
+        "seasonality",
+        "demand forecasting",
+        "weather impact",
+        "revenue"
+      ]
+    },
+    {
+      "id": "paper_003",
+      "title": "Price Sensitivity and Competitive Dynamics in Urban Coffee Markets",
+      "authors": [
+        "Thompson, A.",
+        "Davis, B.",
+        "Martinez, C."
+      ],
+      "year": 2023,
+      "journal": "Marketing Science Quarterly",
+      "abstract": "Investigation of 5,000 consumers across 12 metropolitan areas reveals price elasticity of -1.4 for coffee products. Customers who visit competitors weekly are 2.1x more price-sensitive. Quality perception mediates price sensitivity (\u03b2=0.42, SE=0.08).",
+      "key_findings": [
+        "Price elasticity of demand: -1.4 (elastic)",
+        "Competitor visits increase price sensitivity by 110%",
+        "Quality perception mediates price sensitivity (\u03b2=0.42)",
+        "Income correlates positively with quality preference (r=0.58)"
+      ],
+      "methods": "Conjoint analysis, structural equation modeling, market segmentation",
+      "keywords": [
+        "price elasticity",
+        "competition",
+        "consumer behavior",
+        "quality"
+      ]
+    },
+    {
+      "id": "paper_004",
+      "title": "Digital Transformation and Customer Experience in Service Retail",
+      "authors": [
+        "Anderson, K.",
+        "White, J.",
+        "Brown, T."
+      ],
+      "year": 2024,
+      "journal": "Technology and Service Management",
+      "abstract": "Mobile app adoption in retail service settings increases customer satisfaction by 0.6 points (on 5-point scale) and reduces perceived wait times by 23%. App users demonstrate 41% lower churn rates. Integration of loyalty programs with mobile platforms shows synergistic effects.",
+      "key_findings": [
+        "Mobile apps increase satisfaction by 0.6 points (12%)",
+        "App users have 41% lower churn rates",
+        "Perceived wait time reduced by 23% with mobile ordering",
+        "Loyalty + mobile app combination yields 67% higher retention"
+      ],
+      "methods": "Quasi-experimental design, difference-in-differences analysis",
+      "keywords": [
+        "mobile apps",
+        "customer experience",
+        "digital transformation",
+        "churn"
+      ]
+    },
+    {
+      "id": "paper_005",
+      "title": "Geographic Segmentation and Market Heterogeneity in Chain Retail",
+      "authors": [
+        "Liu, X.",
+        "Patel, R.",
+        "O'Brien, M."
+      ],
+      "year": 2023,
+      "journal": "Journal of Business Geography",
+      "abstract": "Analysis of regional differences in consumer behavior across 45 US markets. Northeast markets show 19% higher price tolerance but 15% lower visit frequency. West Coast customers prioritize quality (mean rating: 4.3/5) over price. Midwest demonstrates strongest loyalty program engagement (72% enrollment).",
+      "key_findings": [
+        "Northeast: 19% higher price tolerance, 15% lower frequency",
+        "West Coast: highest quality preference (4.3/5 avg)",
+        "Midwest: strongest loyalty enrollment (72%)",
+        "South: most price-sensitive, highest competitor switching"
+      ],
+      "methods": "Multi-level modeling, geographic information systems, cluster analysis",
+      "keywords": [
+        "geographic segmentation",
+        "regional differences",
+        "market heterogeneity"
+      ]
+    },
+    {
+      "id": "paper_006",
+      "title": "Wait Time Management and Customer Satisfaction in Quick-Service Environments",
+      "authors": [
+        "Garcia, F.",
+        "Taylor, N.",
+        "Wilson, D."
+      ],
+      "year": 2024,
+      "journal": "Operations Management Review",
+      "abstract": "Study of 125,000 customer interactions reveals non-linear relationship between wait time and satisfaction. Satisfaction drops sharply after 5-minute threshold (slope change: -0.3 to -0.8 points/minute). Mobile order-ahead reduces wait by average 3.2 minutes and improves satisfaction by 18%.",
+      "key_findings": [
+        "Critical wait time threshold: 5 minutes",
+        "Satisfaction decline accelerates after threshold (-0.8 pts/min)",
+        "Mobile order-ahead reduces wait by 3.2 minutes (40%)",
+        "Peak hours (7-9 AM) show highest wait-satisfaction correlation"
+      ],
+      "methods": "Non-linear regression, queuing theory, time-motion studies",
+      "keywords": [
+        "wait time",
+        "customer satisfaction",
+        "operations",
+        "service quality"
+      ]
+    },
+    {
+      "id": "paper_007",
+      "title": "Promotional Strategy Effectiveness in Repeat-Purchase Service Industries",
+      "authors": [
+        "Kumar, V.",
+        "Lee, S.",
+        "Johnson, M."
+      ],
+      "year": 2023,
+      "journal": "Journal of Marketing Research",
+      "abstract": "Meta-analysis of 47 promotional campaigns finds targeted promotions increase visit frequency by 28% but may reduce transaction value by 12%. Untargeted mass promotions show minimal impact (3% lift). Personalized offers based on purchase history drive 52% higher redemption rates.",
+      "key_findings": [
+        "Targeted promotions: +28% visit frequency, -12% ticket size",
+        "Mass promotions: only 3% lift, poor ROI",
+        "Personalized offers: 52% higher redemption",
+        "Promotion fatigue sets in after 4 weekly offers"
+      ],
+      "methods": "Meta-analysis, controlled experiments, propensity score matching",
+      "keywords": [
+        "promotions",
+        "marketing effectiveness",
+        "personalization",
+        "ROI"
+      ]
+    },
+    {
+      "id": "paper_008",
+      "title": "Competitive Benchmarking and Market Share Dynamics in Urban Coffee Retail",
+      "authors": [
+        "Zhang, W.",
+        "Cohen, R.",
+        "Murphy, K."
+      ],
+      "year": 2024,
+      "journal": "Strategic Management Review",
+      "abstract": "Examination of competitive dynamics across 8 major US cities. Customers visiting multiple chains monthly ('multi-homers') represent 38% of market but contribute 61% of total category revenue. Quality differentiation sustains price premiums of 15-22% vs. value competitors.",
+      "key_findings": [
+        "Multi-homers: 38% of customers, 61% of revenue",
+        "Quality leaders command 15-22% price premium",
+        "Store proximity within 0.5 miles reduces customer loyalty 31%",
+        "Brand switching correlates with new store openings (r=0.68)"
+      ],
+      "methods": "Market structure analysis, discrete choice modeling, spatial analysis",
+      "keywords": [
+        "competition",
+        "market share",
+        "brand switching",
+        "positioning"
+      ]
+    }
+  ],
+  "keywords_index": {
+    "customer loyalty": [
+      "paper_001"
+    ],
+    "retention": [
+      "paper_001"
+    ],
+    "mobile apps": [
+      "paper_001",
+      "paper_004"
+    ],
+    "quick service": [
+      "paper_001"
+    ],
+    "seasonality": [
+      "paper_002"
+    ],
+    "demand forecasting": [
+      "paper_002"
+    ],
+    "weather impact": [
+      "paper_002"
+    ],
+    "revenue": [
+      "paper_002"
+    ],
+    "price elasticity": [
+      "paper_003"
+    ],
+    "competition": [
+      "paper_003",
+      "paper_008"
+    ],
+    "consumer behavior": [
+      "paper_003"
+    ],
+    "quality": [
+      "paper_003"
+    ],
+    "customer experience": [
+      "paper_004"
+    ],
+    "digital transformation": [
+      "paper_004"
+    ],
+    "churn": [
+      "paper_004"
+    ],
+    "geographic segmentation": [
+      "paper_005"
+    ],
+    "regional differences": [
+      "paper_005"
+    ],
+    "market heterogeneity": [
+      "paper_005"
+    ],
+    "wait time": [
+      "paper_006"
+    ],
+    "customer satisfaction": [
+      "paper_006"
+    ],
+    "operations": [
+      "paper_006"
+    ],
+    "service quality": [
+      "paper_006"
+    ],
+    "promotions": [
+      "paper_007"
+    ],
+    "marketing effectiveness": [
+      "paper_007"
+    ],
+    "personalization": [
+      "paper_007"
+    ],
+    "ROI": [
+      "paper_007"
+    ],
+    "market share": [
+      "paper_008"
+    ],
+    "brand switching": [
+      "paper_008"
+    ],
+    "positioning": [
+      "paper_008"
+    ]
+  },
+  "authors_index": {
+    "Smith, J.": [
+      "paper_001"
+    ],
+    "Johnson, K.": [
+      "paper_001"
+    ],
+    "Williams, R.": [
+      "paper_001"
+    ],
+    "Chen, L.": [
+      "paper_002"
+    ],
+    "Rodriguez, M.": [
+      "paper_002"
+    ],
+    "Park, S.": [
+      "paper_002"
+    ],
+    "Thompson, A.": [
+      "paper_003"
+    ],
+    "Davis, B.": [
+      "paper_003"
+    ],
+    "Martinez, C.": [
+      "paper_003"
+    ],
+    "Anderson, K.": [
+      "paper_004"
+    ],
+    "White, J.": [
+      "paper_004"
+    ],
+    "Brown, T.": [
+      "paper_004"
+    ],
+    "Liu, X.": [
+      "paper_005"
+    ],
+    "Patel, R.": [
+      "paper_005"
+    ],
+    "O'Brien, M.": [
+      "paper_005"
+    ],
+    "Garcia, F.": [
+      "paper_006"
+    ],
+    "Taylor, N.": [
+      "paper_006"
+    ],
+    "Wilson, D.": [
+      "paper_006"
+    ],
+    "Kumar, V.": [
+      "paper_007"
+    ],
+    "Lee, S.": [
+      "paper_007"
+    ],
+    "Johnson, M.": [
+      "paper_007"
+    ],
+    "Zhang, W.": [
+      "paper_008"
+    ],
+    "Cohen, R.": [
+      "paper_008"
+    ],
+    "Murphy, K.": [
+      "paper_008"
+    ]
+  }
+}
