@@ -3,7 +3,8 @@ Configuration for Kosmos Framework
 """
 
 # API Configuration
-OPENAI_API_KEY = "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"  # Replace with your OpenAI API key
+# Use environment variable OPENAI_API_KEY instead of hardcoding
+OPENAI_API_KEY = None
 MODEL_NAME = "gpt-3.5-turbo"
 TEMPERATURE = 0.7
 
