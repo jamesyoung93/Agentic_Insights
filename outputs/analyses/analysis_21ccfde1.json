@@ -1,7 +1,0 @@
-{
-  "analysis_id": "21ccfde1",
-  "question": "What are the main reasons for customer complaints and how do they correlate with customer satisfaction levels?",
-  "code": "merged_data = {'complaint_reason': 'reason', 'satisfaction_score': 5}\ncomplaints = merged_data.get('complaint_reason', merged_data.get('complaints'))\nsatisfaction = merged_data['satisfaction_score']",
-  "output": "",
-  "summary": {}
-}
