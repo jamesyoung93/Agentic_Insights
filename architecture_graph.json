@@ -1,353 +1,167 @@
 {
-  "metadata": {
-    "title": "Agentic Insights System Architecture",
-    "created": "2025-11-12",
-    "entry_point": "streamlit_app_ULTIMATE.py",
-    "description": "Autonomous data-driven discovery system with statistical analysis and LLM-powered synthesis",
-    "constraints": {
-      "max_nodes": 12,
-      "max_edges": 16,
-      "actual_nodes": 12,
-      "actual_edges": 15,
-      "compliant": true
-    }
-  },
   "nodes": [
     {
       "id": "csv_data",
-      "label": "CSV Data",
+      "label": "CSV Data\n(customers,\ncompetitors)",
       "type": "datastore",
-      "shape": "cylinder",
-      "files": ["data/customers.csv", "data/competitor_data.csv"],
-      "description": "Customer transaction and competitor data loaded via pandas.read_csv",
-      "verified": true
+      "x": 0.8,
+      "y": 2.5
     },
     {
-      "id": "literature_store",
-      "label": "Literature Store",
-      "type": "datastore",
-      "shape": "cylinder",
-      "files": ["knowledge/literature/*.txt", "knowledge/literature_index.json"],
-      "description": "Research papers and metadata index",
-      "verified": true
+      "id": "openai",
+      "label": "OpenAI API\n(GPT-3.5/4)",
+      "type": "external",
+      "x": 0.8,
+      "y": 5.0
     },
     {
-      "id": "config",
-      "label": "Config",
-      "type": "input",
-      "shape": "parallelogram",
-      "files": ["config.py"],
-      "description": "API keys, model settings, framework configuration",
-      "verified": true
-    },
-    {
-      "id": "streamlit_ui",
+      "id": "streamlit",
       "label": "Streamlit UI",
       "type": "service",
-      "shape": "rectangle",
-      "files": ["streamlit_app_ULTIMATE.py"],
-      "description": "Web interface orchestrating discovery cycles, user configuration, and result display",
-      "key_functions": ["run_discovery_cycle", "perform_statistical_analysis", "load_data", "generate_final_report"],
-      "verified": true
+      "x": 3.0,
+      "y": 1.2
     },
     {
-      "id": "kosmos_framework",
-      "label": "Kosmos Framework",
+      "id": "main_orch",
+      "label": "Kosmos\nOrchestrator",
       "type": "service",
-      "shape": "rectangle",
-      "files": ["main.py"],
-      "description": "CLI orchestrator coordinating agents across research cycles (alternative entry point)",
-      "key_functions": ["run", "_generate_research_questions", "_synthesize_cycle_discoveries"],
-      "verified": true
+      "x": 3.0,
+      "y": 3.0
     },
     {
-      "id": "data_analyst",
-      "label": "Data Analyst Agent",
+      "id": "data_agent",
+      "label": "Data Analysis\nAgent",
       "type": "service",
-      "shape": "rectangle",
-      "files": ["agents/data_analyst.py"],
-      "description": "Generates Python analysis code via LLM, executes with scipy/pandas, retries on error",
-      "key_functions": ["analyze", "_generate_code", "_execute_code", "_fix_code"],
-      "verified": true
+      "x": 5.2,
+      "y": 2.2
     },
     {
-      "id": "lit_search_agent",
-      "label": "Literature Agent",
+      "id": "lit_agent",
+      "label": "Literature\nAgent",
       "type": "service",
-      "shape": "rectangle",
-      "files": ["agents/literature_searcher.py"],
-      "description": "Searches papers by keyword, ranks by relevance, extracts insights via LLM",
-      "key_functions": ["search", "_find_relevant_papers", "_extract_insights"],
-      "verified": true
+      "x": 5.2,
+      "y": 3.8
+    },
+    {
+      "id": "stats_engine",
+      "label": "Statistical\nEngine (scipy)",
+      "type": "service",
+      "x": 7.4,
+      "y": 2.2
     },
     {
       "id": "world_model",
-      "label": "World Model",
+      "label": "World Model\n(State Mgmt)",
       "type": "service",
-      "shape": "rectangle",
-      "files": ["world_model_builder.py", "agents/world_model.py"],
-      "description": "Maintains discoveries, trajectories, hypotheses across cycles",
-      "key_functions": ["add_discovery", "add_trajectory", "increment_cycle", "save"],
-      "verified": true
+      "x": 7.4,
+      "y": 4.2
     },
     {
-      "id": "openai_api",
-      "label": "OpenAI API",
-      "type": "external",
-      "shape": "hexagon",
-      "description": "GPT-3.5/4 for code generation, synthesis, keyword extraction, ranking",
-      "endpoint": "api.openai.com",
-      "verified": true
-    },
-    {
-      "id": "world_model_state",
-      "label": "World Model JSON",
+      "id": "file_storage",
+      "label": "Local Storage\n(JSON/CSV)",
       "type": "datastore",
-      "shape": "cylinder",
-      "files": ["world_model.json", "outputs/world_model_state.json"],
-      "description": "Persistent state: discoveries, trajectories, hypotheses, cycle summaries",
-      "verified": true
+      "x": 9.6,
+      "y": 3.0
     },
     {
-      "id": "enhanced_report",
-      "label": "Enhanced Report",
+      "id": "analyses_out",
+      "label": "Analysis\nOutputs (.py)",
       "type": "output",
-      "shape": "parallelogram",
-      "files": ["auto_enhanced_report.txt", "outputs/discovery_report.txt"],
-      "description": "Publication-ready report with statistical evidence and discoveries",
-      "verified": true
+      "x": 9.6,
+      "y": 5.2
     },
     {
-      "id": "analysis_artifacts",
-      "label": "Analysis Code",
+      "id": "reports_out",
+      "label": "Reports\n(.txt, .pptx)",
       "type": "output",
-      "shape": "parallelogram",
-      "files": ["outputs/analyses/*.py", "outputs/analyses/*.json"],
-      "description": "Generated Python scripts and execution results",
-      "verified": true
+      "x": 11.5,
+      "y": 4.0
     }
   ],
   "edges": [
     {
-      "id": "e1",
       "from": "csv_data",
-      "to": "streamlit_ui",
-      "label": "Load CSV (pandas)",
+      "to": "data_agent",
+      "label": "Batch CSV",
       "style": "solid",
-      "weight": "thick",
-      "frequency": "startup",
-      "interface": "pandas.read_csv",
-      "verified": true
+      "weight": "medium"
     },
     {
-      "id": "e2",
-      "from": "literature_store",
-      "to": "lit_search_agent",
-      "label": "Read papers (JSON+txt)",
+      "from": "streamlit",
+      "to": "main_orch",
+      "label": "User requests",
       "style": "solid",
-      "weight": "medium",
-      "frequency": "per-query",
-      "interface": "json.load + file.read",
-      "verified": true
+      "weight": "thin"
     },
     {
-      "id": "e3",
-      "from": "config",
-      "to": "streamlit_ui",
-      "label": "Load settings",
+      "from": "main_orch",
+      "to": "data_agent",
+      "label": "Questions",
       "style": "solid",
-      "weight": "thin",
-      "frequency": "startup",
-      "interface": "import config",
-      "verified": true
+      "weight": "medium"
     },
     {
-      "id": "e4",
-      "from": "streamlit_ui",
-      "to": "data_analyst",
-      "label": "Research question",
+      "from": "main_orch",
+      "to": "lit_agent",
+      "label": "Queries",
       "style": "solid",
-      "weight": "thick",
-      "frequency": "per-cycle",
-      "interface": "analyze(question, context)",
-      "verified": true
+      "weight": "thin"
     },
     {
-      "id": "e5",
-      "from": "streamlit_ui",
-      "to": "lit_search_agent",
-      "label": "Literature query",
-      "style": "dotted",
-      "weight": "medium",
-      "frequency": "optional",
-      "interface": "search(query, context)",
-      "verified": true,
-      "note": "Only when LLM mode enabled"
-    },
-    {
-      "id": "e6",
-      "from": "data_analyst",
-      "to": "openai_api",
-      "label": "Generate code (REST JSON)",
+      "from": "data_agent",
+      "to": "openai",
+      "label": "Code gen",
       "style": "solid",
-      "weight": "thick",
-      "frequency": "per-analysis",
-      "interface": "openai.chat.completions.create",
-      "verified": true
+      "weight": "medium"
     },
     {
-      "id": "e7",
-      "from": "lit_search_agent",
-      "to": "openai_api",
-      "label": "Synthesize (REST JSON)",
+      "from": "lit_agent",
+      "to": "openai",
+      "label": "Search",
       "style": "solid",
-      "weight": "medium",
-      "frequency": "per-query",
-      "interface": "openai.chat.completions.create",
-      "verified": true
+      "weight": "thin"
     },
     {
-      "id": "e8",
-      "from": "data_analyst",
+      "from": "data_agent",
+      "to": "stats_engine",
+      "label": "Stats tests",
+      "style": "solid",
+      "weight": "thick"
+    },
+    {
+      "from": "stats_engine",
       "to": "world_model",
-      "label": "Store trajectory",
+      "label": "Results JSON",
       "style": "solid",
-      "weight": "thick",
-      "frequency": "per-analysis",
-      "interface": "add_trajectory(type, objective, outputs)",
-      "verified": true
+      "weight": "medium"
     },
     {
-      "id": "e9",
-      "from": "lit_search_agent",
+      "from": "lit_agent",
       "to": "world_model",
-      "label": "Store findings",
+      "label": "Findings",
       "style": "solid",
-      "weight": "medium",
-      "frequency": "per-query",
-      "interface": "add_literature_finding(finding)",
-      "verified": true
+      "weight": "thin"
     },
     {
-      "id": "e10",
       "from": "world_model",
-      "to": "world_model_state",
-      "label": "Save JSON",
+      "to": "file_storage",
+      "label": "State save",
       "style": "solid",
-      "weight": "medium",
-      "frequency": "per-update",
-      "interface": "json.dump(to_dict(), file)",
-      "verified": true
+      "weight": "medium"
     },
     {
-      "id": "e11",
-      "from": "streamlit_ui",
-      "to": "world_model",
-      "label": "Update discoveries",
+      "from": "data_agent",
+      "to": "analyses_out",
+      "label": "Code artifacts",
       "style": "solid",
-      "weight": "thick",
-      "frequency": "per-cycle",
-      "interface": "add_discovery(title, summary, evidence)",
-      "verified": true
+      "weight": "thin"
     },
     {
-      "id": "e12",
       "from": "world_model",
-      "to": "enhanced_report",
-      "label": "Generate report",
+      "to": "reports_out",
+      "label": "Final reports",
       "style": "solid",
-      "weight": "medium",
-      "frequency": "completion",
-      "interface": "AutoEnhancedReportGenerator.generate",
-      "verified": true
-    },
-    {
-      "id": "e13",
-      "from": "data_analyst",
-      "to": "analysis_artifacts",
-      "label": "Save code/results",
-      "style": "solid",
-      "weight": "medium",
-      "frequency": "per-analysis",
-      "interface": "json.dump + file.write",
-      "verified": true
-    },
-    {
-      "id": "e14",
-      "from": "kosmos_framework",
-      "to": "data_analyst",
-      "label": "CLI orchestration",
-      "style": "dashed",
-      "weight": "medium",
-      "frequency": "cli-mode",
-      "interface": "analyze(question, context)",
-      "verified": true,
-      "note": "CLI alternative to Streamlit"
-    },
-    {
-      "id": "e15",
-      "from": "kosmos_framework",
-      "to": "world_model",
-      "label": "CLI orchestration",
-      "style": "dashed",
-      "weight": "medium",
-      "frequency": "cli-mode",
-      "interface": "add_analysis/discovery",
-      "verified": true,
-      "note": "CLI alternative to Streamlit"
+      "weight": "medium"
     }
-  ],
-  "swimlanes": [
-    {
-      "name": "Sources",
-      "nodes": ["csv_data", "literature_store", "config"]
-    },
-    {
-      "name": "Processing",
-      "nodes": ["streamlit_ui", "kosmos_framework"]
-    },
-    {
-      "name": "Agent Layer",
-      "nodes": ["data_analyst", "lit_search_agent", "world_model"]
-    },
-    {
-      "name": "External",
-      "nodes": ["openai_api"]
-    },
-    {
-      "name": "Storage",
-      "nodes": ["world_model_state"]
-    },
-    {
-      "name": "Outputs",
-      "nodes": ["enhanced_report", "analysis_artifacts"]
-    }
-  ],
-  "statistics": {
-    "total_nodes": 12,
-    "total_edges": 15,
-    "verified_links": 15,
-    "inferred_links": 0,
-    "max_nodes_constraint": 12,
-    "max_edges_constraint": 16,
-    "within_constraints": true
-  },
-  "legend": {
-    "shapes": {
-      "cylinder": "Datastore (files, databases)",
-      "rectangle": "Service/Module (processing logic)",
-      "hexagon": "External system (APIs, services)",
-      "parallelogram": "Input/Output artifact (files, reports)"
-    },
-    "line_styles": {
-      "solid": "Verified link (found in code)",
-      "dotted": "Inferred link (logical connection)",
-      "dashed": "Optional/feature-flag path"
-    },
-    "stroke_weights": {
-      "thin": "Ad-hoc / startup only",
-      "medium": "Daily / per-cycle",
-      "thick": "Real-time / high-frequency"
-    }
-  }
+  ]
 }
