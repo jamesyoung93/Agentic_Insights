@@ -1,0 +1,24 @@
+{
+  "id": "paper_005",
+  "title": "Geographic Segmentation and Market Heterogeneity in Chain Retail",
+  "authors": [
+    "Liu, X.",
+    "Patel, R.",
+    "O'Brien, M."
+  ],
+  "year": 2023,
+  "journal": "Journal of Business Geography",
+  "abstract": "Analysis of regional differences in consumer behavior across 45 US markets. Northeast markets show 19% higher price tolerance but 15% lower visit frequency. West Coast customers prioritize quality (mean rating: 4.3/5) over price. Midwest demonstrates strongest loyalty program engagement (72% enrollment).",
+  "key_findings": [
+    "Northeast: 19% higher price tolerance, 15% lower frequency",
+    "West Coast: highest quality preference (4.3/5 avg)",
+    "Midwest: strongest loyalty enrollment (72%)",
+    "South: most price-sensitive, highest competitor switching"
+  ],
+  "methods": "Multi-level modeling, geographic information systems, cluster analysis",
+  "keywords": [
+    "geographic segmentation",
+    "regional differences",
+    "market heterogeneity"
+  ]
+}
