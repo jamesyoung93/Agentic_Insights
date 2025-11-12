@@ -1,0 +1,25 @@
+
+Competitive Benchmarking and Market Share Dynamics in Urban Coffee Retail
+=========================================================================
+
+Authors: Zhang, W., Cohen, R., Murphy, K.
+Published: 2024 - Strategic Management Review
+
+ABSTRACT
+--------
+Examination of competitive dynamics across 8 major US cities. Customers visiting multiple chains monthly ('multi-homers') represent 38% of market but contribute 61% of total category revenue. Quality differentiation sustains price premiums of 15-22% vs. value competitors.
+
+KEY FINDINGS
+-----------
+1. Multi-homers: 38% of customers, 61% of revenue
+2. Quality leaders command 15-22% price premium
+3. Store proximity within 0.5 miles reduces customer loyalty 31%
+4. Brand switching correlates with new store openings (r=0.68)
+
+METHODS
+-------
+Market structure analysis, discrete choice modeling, spatial analysis
+
+KEYWORDS
+--------
+competition, market share, brand switching, positioning
