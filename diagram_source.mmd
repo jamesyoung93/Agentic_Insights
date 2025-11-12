@@ -1,0 +1,69 @@
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#f0f0f0','primaryTextColor':'#000','primaryBorderColor':'#333','lineColor':'#333','fontSize':'16px'}}}%%
+graph LR
+    %% Node Definitions
+    %% Sources Swimlane
+    csv_data[(CSV Data)]
+    literature_store[(Literature Store)]
+    config[/Config/]
+
+    %% Processing Swimlane
+    streamlit_ui[Streamlit UI]
+    kosmos_framework[Kosmos Framework]
+
+    %% Agent Layer Swimlane
+    data_analyst[Data Analyst Agent]
+    lit_search_agent[Literature Agent]
+    world_model[World Model]
+
+    %% External Swimlane
+    openai_api{{OpenAI API}}
+
+    %% Storage Swimlane
+    world_model_state[(World Model JSON)]
+
+    %% Outputs Swimlane
+    enhanced_report[/Enhanced Report/]
+    analysis_artifacts[/Analysis Code/]
+
+    %% Edge Definitions (15 edges total)
+    %% Sources → Processing
+    csv_data -->|"Load CSV (pandas)<br/>thick"| streamlit_ui
+    config -.->|"Load settings<br/>thin"| streamlit_ui
+
+    %% Sources → Agents
+    literature_store -->|"Read papers (JSON+txt)<br/>medium"| lit_search_agent
+
+    %% Processing → Agents
+    streamlit_ui -->|"Research question<br/>thick"| data_analyst
+    streamlit_ui -.->|"Literature query<br/>medium"| lit_search_agent
+    streamlit_ui -->|"Update discoveries<br/>thick"| world_model
+
+    %% CLI Alternative (dashed)
+    kosmos_framework -.->|"CLI orchestration<br/>medium"| data_analyst
+    kosmos_framework -.->|"CLI orchestration<br/>medium"| world_model
+
+    %% Agents → External
+    data_analyst -->|"Generate code (REST JSON)<br/>thick"| openai_api
+    lit_search_agent -->|"Synthesize (REST JSON)<br/>medium"| openai_api
+
+    %% Agents → World Model
+    data_analyst -->|"Store trajectory<br/>thick"| world_model
+    lit_search_agent -->|"Store findings<br/>medium"| world_model
+
+    %% World Model → Storage
+    world_model -->|"Save JSON<br/>medium"| world_model_state
+
+    %% World Model → Outputs
+    world_model -->|"Generate report<br/>medium"| enhanced_report
+    data_analyst -->|"Save code/results<br/>medium"| analysis_artifacts
+
+    %% Styling
+    classDef datastoreStyle fill:#d0e0f0,stroke:#1e5a8e,stroke-width:3px
+    classDef serviceStyle fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef externalStyle fill:#fff3e0,stroke:#e65100,stroke-width:3px
+    classDef outputStyle fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
+
+    class csv_data,literature_store,world_model_state datastoreStyle
+    class streamlit_ui,kosmos_framework,data_analyst,lit_search_agent,world_model serviceStyle
+    class openai_api externalStyle
+    class config,enhanced_report,analysis_artifacts outputStyle
