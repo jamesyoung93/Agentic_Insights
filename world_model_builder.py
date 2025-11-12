@@ -44,7 +44,7 @@ class Trajectory:
 class WorldModel:
     """
     Structured world model for managing discovery context
-    Based on the Kosmos architecture from the paper
+    Tracks discoveries, analyses, and findings across research cycles
     """
     
     def __init__(self, base_dir: Optional[Path] = None):

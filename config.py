@@ -1,5 +1,5 @@
 """
-Configuration for Kosmos Framework
+Configuration for AI Scientist Framework
 """
 
 # API Configuration
